@@ -55,6 +55,18 @@ Sans compte, hors ligne, données locales (SQLite). Interface en anglais, code e
   (appli fermée, mode économie d'énergie, redémarrage de l'appareil, « Allow exact time »), la boîte de dialogue de
   permission système, la persistance des déclencheurs après redémarrage. Les rappels hebdomadaires n'ont pas non plus
   été observés sur appareil.
+- Accueil complet, dans l'ordre de la spec : bandeau, calendrier hebdomadaire (lundi → dimanche, navigation par
+  semaine, jour sélectionné, 5 états : futur / repos / sans objectif / aujourd'hui « en cours » / passé), panneaux
+  « Current form » (radar 14 jours, indépendant du jour choisi, axes sans assez de données affichés « Not enough data
+  (n/3) », jamais 0) et « By category » (jour choisi, top 3 + « See all », « Uncategorized » inclus, échelle commune),
+  « Today's quests » (jour choisi, max 3 + « See all quests », terminées repliables) et bouton « Free session ».
+  Choisir un jour ne change que les catégories et les quêtes. Score = `min(100, minutes / objectif)`, affiché tronqué
+  (99,6 → 99), jamais > 100 ; les panneaux s'empilent sous 420 px de large ou avec une police agrandie (> 1,2).
+  - **Testé** : scores / états de cellule, radar (seuils, fenêtre 14 jours, données insuffisantes), répartition par
+    catégorie, lectures SQL et cohérence avec les totaux du bandeau, textes et sommets du radar, règle d'empilement.
+    **Vérifié à la main sur la version web** : rendu à 360 px (empilé) et sélection d'un jour. **Non testé** : rendu des
+    composants en test automatique (aucune bibliothèque de test de composants installée), police × 1,3 sur appareil,
+    lecteurs d'écran, iOS / Android.
 - Rien de natif n'est testé (iOS/Android) : seule la version web a été exécutée.
 
 ## Lancer le projet

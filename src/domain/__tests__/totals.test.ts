@@ -1,4 +1,12 @@
-import { buildFocusByDay, goalProgress, headerTotals, sumFocusRange, weekRange } from '../totals';
+import {
+  buildFocusByDay,
+  categoryBars,
+  goalProgress,
+  headerTotals,
+  liveFocusOnDate,
+  sumFocusRange,
+  weekRange,
+} from '../totals';
 import type { DailyGoalVersion, LocalDate, WeeklyGoalVersion } from '../types';
 
 const d = (value: string) => value as LocalDate;
@@ -129,5 +137,53 @@ describe('goalProgress', () => {
     expect(goalProgress({ focusSec: 3600, goalMin: 120 })).toBe(0.5);
     expect(goalProgress({ focusSec: 99_999, goalMin: 120 })).toBe(1);
     expect(goalProgress({ focusSec: 0, goalMin: 120 })).toBe(0);
+  });
+});
+
+describe('categoryBars / liveFocusOnDate', () => {
+  const category = (id: string, sortOrder: number, archivedAt: number | null = null) => ({
+    id,
+    name: id,
+    icon: 'school',
+    color: '#fff',
+    sortOrder,
+    archivedAt,
+  });
+  const categories = [category('a', 0), category('b', 1), category('old', 2, 1)];
+
+  it('sums rows per category, biggest first, on a common scale with Uncategorized included', () => {
+    const bars = categoryBars(
+      [
+        { categoryId: 'a', focusedSec: 600 },
+        { categoryId: 'b', focusedSec: 1200 },
+        { categoryId: 'a', focusedSec: 600 },
+        { categoryId: null, focusedSec: 300 },
+        { categoryId: 'b', focusedSec: 0 },
+      ],
+      categories,
+    );
+    expect(bars.map((bar) => [bar.category?.id ?? null, bar.focusedSec, bar.ratio])).toEqual([
+      ['a', 1200, 1], // tie: the user's category order decides
+      ['b', 1200, 1],
+      [null, 300, 0.25],
+    ]);
+  });
+
+  it('keeps an archived category and returns nothing for an empty day', () => {
+    const bars = categoryBars([{ categoryId: 'old', focusedSec: 60 }], categories);
+    expect(bars[0]?.category?.archivedAt).toBe(1);
+    expect(categoryBars([], categories)).toEqual([]);
+  });
+
+  it('liveFocusOnDate gives the part of the running session on that day', () => {
+    const start = new Date(2026, 9, 22, 23, 50).getTime();
+    const live = {
+      session: { mode: 'stopwatch' as const, plannedSec: null, startedAt: start },
+      pauses: [],
+      now: start + 20 * 60_000,
+    };
+    expect(liveFocusOnDate(live, d('2026-10-22'))).toBe(10 * 60);
+    expect(liveFocusOnDate(live, d('2026-10-23'))).toBe(10 * 60);
+    expect(liveFocusOnDate(live, d('2026-10-24'))).toBe(0);
   });
 });

@@ -29,6 +29,52 @@ export function formatTimeOfDay(ms: number): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
+const MONTHS_LONG = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+] as const;
+const WEEKDAYS_LONG = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
+
+function dateParts(date: string) {
+  const [y = 1970, m = 1, d = 1] = date.split('-').map(Number);
+  const weekday = (new Date(y, m - 1, d).getDay() + 6) % 7; // 0 = Monday
+  return { y, month: m - 1, d, weekday };
+}
+
+const shortName = (name: string) => name.slice(0, 3);
+
+/** "19 – 25 Oct 2026", "26 Oct – 1 Nov 2026" or "29 Dec 2026 – 4 Jan 2027". */
+export function formatWeekRange(from: string, to: string): string {
+  const a = dateParts(from);
+  const b = dateParts(to);
+  const monthOf = (month: number) => shortName(MONTHS_LONG[month] ?? '');
+  if (a.y !== b.y) return `${a.d} ${monthOf(a.month)} ${a.y} – ${b.d} ${monthOf(b.month)} ${b.y}`;
+  if (a.month !== b.month) return `${a.d} ${monthOf(a.month)} – ${b.d} ${monthOf(b.month)} ${b.y}`;
+  return `${a.d} – ${b.d} ${monthOf(b.month)} ${b.y}`;
+}
+
+/** "Thursday 22 October". */
+export function formatDayLong(date: string): string {
+  const { d, month, weekday } = dateParts(date);
+  return `${WEEKDAYS_LONG[weekday] ?? ''} ${d} ${MONTHS_LONG[month] ?? ''}`;
+}
+
+/** "Thu 22 Oct". */
+export function formatDayShort(date: string): string {
+  const { d, month, weekday } = dateParts(date);
+  return `${shortName(WEEKDAYS_LONG[weekday] ?? '')} ${d} ${shortName(MONTHS_LONG[month] ?? '')}`;
+}
+
 export const en = {
   app: {
     name: 'Tatakae',
@@ -268,8 +314,82 @@ export const en = {
     },
   },
   home: {
-    startSession: 'Start a session',
+    startSession: 'Free session',
     resumeSession: 'Resume session',
+    calendar: {
+      previousWeek: 'Previous week',
+      nextWeek: 'Next week',
+      thisWeek: 'This week',
+      weekA11y: (range: string) => `Week of ${range}`,
+      rest: 'Rest',
+      noGoal: '—',
+      inProgressShort: 'now',
+      cellA11y: (day: string, state: string) => `${day}, ${state}`,
+      stateScore: (score: number) => `${score} percent`,
+      stateInProgress: (score: number) => `${score} percent, in progress`,
+      stateFuture: 'no score yet',
+      stateRest: 'planned rest day',
+      stateNoGoal: 'no goal set',
+      selected: 'selected',
+    },
+    form: {
+      title: 'Current form',
+      subtitle: 'Last 14 days',
+      insufficient: 'Not enough data',
+      axes: {
+        strength: 'Strength',
+        endurance: 'Endurance',
+        mental: 'Mental',
+        consistency: 'Consistency',
+      },
+      axesShort: {
+        strength: 'STR',
+        endurance: 'END',
+        mental: 'MEN',
+        consistency: 'CON',
+      },
+      valueA11y: (axis: string, value: number) => `${axis}: ${value} out of 100`,
+      noValueA11y: (axis: string) => `${axis}: not enough data`,
+      chartA11y: 'Radar chart of your current form over the last 14 days',
+      strengthSample: (rated: number) => `${rated} rated session${rated === 1 ? '' : 's'}`,
+      strengthMissing: (rated: number, required: number) => `${rated}/${required} rated sessions`,
+      enduranceSample: (focusMin: number, goalMin: number) => `${focusMin} of ${goalMin} min planned`,
+      enduranceMissing: 'No goal day yet',
+      inProgress: 'today in progress',
+      mentalSample: (completed: number, closed: number) =>
+        `${completed} of ${closed} countdown${closed === 1 ? '' : 's'} completed`,
+      mentalMissing: 'No finished countdown yet',
+      mentalStops: (stopped: number, reasons: string) =>
+        `${stopped} early stop${stopped === 1 ? '' : 's'}${reasons ? `: ${reasons}` : ''}`,
+      consistencySample: (achieved: number, planned: number) => `${achieved} of ${planned} goal days reached`,
+      consistencyMissing: 'No past goal day yet',
+      explain: {
+        strength:
+          'Average of your optional 1–5 focus ratings × 20 over the last 14 days. Sessions you did not rate are ignored, and it needs at least 3 ratings.',
+        endurance:
+          'Focus time done on days with a goal, divided by the sum of those goals. Rest days, days without a goal and future days are left out; today counts while it is in progress.',
+        mental:
+          'Countdown sessions taken to the end, divided by countdown sessions finished. Free stopwatches, manual entries and corrected sessions are excluded.',
+        consistency:
+          'Past days with a goal where you reached it, divided by those days. Rest days and future days are excluded, and today only counts from tomorrow.',
+      },
+    },
+    categories: {
+      title: 'By category',
+      empty: 'No session this day',
+      seeAll: 'See all',
+      uncategorized: 'Uncategorized',
+      archived: 'archived',
+      fullTitle: 'Focus by category',
+      rowA11y: (name: string, duration: string) => `${name}, ${duration}`,
+    },
+    quests: {
+      todayTitle: "Today's quests",
+      dayTitle: (day: string) => `Quests · ${day}`,
+      empty: 'No quests for this day.',
+      seeAll: 'See all quests',
+      addQuest: 'Add a quest',
+    },
   },
   placeholder: {
     comingSoon: 'Coming in a later step.',

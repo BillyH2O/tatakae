@@ -2,7 +2,7 @@ import { resolveDayGoal, resolveWeekGoal } from './goals';
 import { focusIntervals, type PauseSpan, type TimerSession } from './timer/machine';
 import { addDays, weekStart } from './time/localDate';
 import { splitIntervalsByLocalDay } from './time/splitByDay';
-import type { DailyGoalVersion, DayFocus, EpochMs, LocalDate, WeeklyGoalVersion } from './types';
+import type { Category, DailyGoalVersion, DayFocus, EpochMs, LocalDate, WeeklyGoalVersion } from './types';
 
 export type FocusByDay = ReadonlyMap<LocalDate, number>;
 
@@ -41,6 +41,49 @@ export function sumFocusRange(byDay: FocusByDay, from: LocalDate, to: LocalDate)
 export function weekRange(date: LocalDate): { from: LocalDate; to: LocalDate } {
   const from = weekStart(date);
   return { from, to: addDays(from, 6) };
+}
+
+/** Live focus (seconds) of the running session that falls on local day `date`. */
+export function liveFocusOnDate(live: LiveSession, date: LocalDate): number {
+  const days = splitIntervalsByLocalDay(focusIntervals(live.session, live.pauses, live.now));
+  return days.find((day) => day.localDate === date)?.focusedSec ?? 0;
+}
+
+export interface CategoryFocus {
+  /** Null = "Uncategorized". */
+  categoryId: string | null;
+  focusedSec: number;
+}
+
+export interface CategoryBar {
+  /** Null = "Uncategorized"; an archived category is still shown (`category.archivedAt`). */
+  category: Category | null;
+  focusedSec: number;
+  /** 0..1 on a common scale: the biggest category of the day is 1 (not a goal). */
+  ratio: number;
+}
+
+/**
+ * Focus per category for one day, biggest first, drawn on a common scale. Rows of the same
+ * category are summed; the live session is added to its own category by the caller.
+ */
+export function categoryBars(rows: readonly CategoryFocus[], categories: readonly Category[]): CategoryBar[] {
+  const totals = new Map<string | null, number>();
+  for (const row of rows) {
+    if (row.focusedSec > 0) totals.set(row.categoryId, (totals.get(row.categoryId) ?? 0) + row.focusedSec);
+  }
+  const max = Math.max(0, ...totals.values());
+  const sortOrder = (id: string | null) =>
+    id === null ? Number.MAX_SAFE_INTEGER : (categories.find((category) => category.id === id)?.sortOrder ?? 0);
+  return [...totals.entries()]
+    .map(([id, focusedSec]) => ({
+      id,
+      category: id === null ? null : (categories.find((category) => category.id === id) ?? null),
+      focusedSec,
+      ratio: max > 0 ? focusedSec / max : 0,
+    }))
+    .sort((a, b) => b.focusedSec - a.focusedSec || sortOrder(a.id) - sortOrder(b.id))
+    .map(({ category, focusedSec, ratio }) => ({ category, focusedSec, ratio }));
 }
 
 export interface FocusVsGoal {
