@@ -6,6 +6,7 @@ import type { QuestRow as QuestRowModel } from '../../domain/quests';
 import { en } from '../../i18n/en';
 import { playCheckHaptic } from '../../services/feedback';
 import { border, colors, space, touch, type } from '../theme/tokens';
+import { HabitBadge } from './HabitBadge';
 
 const BOX = 26;
 
@@ -141,6 +142,7 @@ export function QuestRow({ row, info, infoTone = 'muted', onToggleComplete, onSt
         accessibilityRole={onOpen ? 'button' : undefined}
         accessibilityLabel={onOpen ? title : undefined}
       >
+        {row.kind === 'habit' ? <HabitBadge icon={row.habit.icon} color={row.habit.color} size={28} /> : null}
         <StrikeTitle title={title} done={shown} />
         {info ? (
           <Text style={[styles.info, infoTone === 'warning' && styles.warning]} numberOfLines={1}>

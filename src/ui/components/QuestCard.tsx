@@ -11,10 +11,12 @@ interface Props {
   onPress?: () => void;
   /** Right column (start button, duration…). */
   right?: ReactNode;
+  /** Replaces the document icon (a habit shows its own badge). */
+  leading?: ReactNode;
 }
 
 /** A quest shown on its own: document icon, title and category, as on the mission and focus mockups. */
-export function QuestCard({ title, subtitle, onPress, right }: Props) {
+export function QuestCard({ title, subtitle, onPress, right, leading }: Props) {
   return (
     <View style={styles.card}>
       <Pressable
@@ -23,7 +25,7 @@ export function QuestCard({ title, subtitle, onPress, right }: Props) {
         style={({ pressed }) => [styles.body, pressed && styles.pressed]}
         accessibilityRole={onPress ? 'button' : undefined}
       >
-        <MaterialCommunityIcons name="file-document-outline" size={34} color={colors.actionBright} />
+        {leading ?? <MaterialCommunityIcons name="file-document-outline" size={34} color={colors.actionBright} />}
         <View style={styles.main}>
           <Text style={styles.title} numberOfLines={2}>
             {title}

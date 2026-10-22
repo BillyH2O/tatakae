@@ -111,6 +111,10 @@ export type OccurrenceStatus = 'pending' | 'done';
 export interface Habit {
   id: string;
   title: string;
+  /** Hex color chosen by the user (always a palette color, see `resolveHabitStyle`). */
+  color: string;
+  /** MaterialCommunityIcons key chosen by the user. */
+  icon: string;
   categoryId: string | null;
   weekdaysMask: number;
   reminderTime: string | null;

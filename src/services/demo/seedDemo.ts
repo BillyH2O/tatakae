@@ -85,6 +85,8 @@ export async function seedDemo(db: SqlDb, clock: Clock, newId: IdGenerator, opti
         {
           id: habitIds[index] as string,
           title: habit.title,
+          color: habit.color,
+          icon: habit.icon,
           categoryId: categoryId(habit.categoryIndex),
           weekdaysMask: habit.weekdaysMask,
           // No reminder: demo mode must never schedule notifications.

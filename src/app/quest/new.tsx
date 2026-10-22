@@ -2,7 +2,9 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { PRODUCT } from '../../config/product';
 import { maskFromWeekdays } from '../../domain/habits';
+import { normalizeHabitTitle } from '../../domain/habitStyle';
 import { addDays, toLocalDate } from '../../domain/time/localDate';
 import type { IsoWeekday, TaskPriority } from '../../domain/types';
 import { useDb } from '../../hooks/useDb';
@@ -11,10 +13,12 @@ import { createHabitQuest, createTaskQuest } from '../../services/questService';
 import { systemClock } from '../../services/clock';
 import { newId } from '../../services/ids';
 import { Button } from '../../ui/components/Button';
+import { HabitStyleFields } from '../../ui/components/HabitStyleFields';
 import { Panel } from '../../ui/components/Panel';
 import { ReminderField, isReminderValid, reminderValue } from '../../ui/components/ReminderField';
 import { SegmentedControl } from '../../ui/components/SegmentedControl';
-import { colors, panelAlpha, space, type } from '../../ui/theme/tokens';
+import { WeekdayPicker } from '../../ui/components/WeekdayPicker';
+import { border, colors, panelAlpha, radius, space, touch, type } from '../../ui/theme/tokens';
 
 type Kind = 'task' | 'habit';
 
@@ -23,17 +27,14 @@ export default function NewQuestScreen() {
   const router = useRouter();
   const [kind, setKind] = useState<Kind>('task');
   const [title, setTitle] = useState('');
+  const [color, setColor] = useState<string>(PRODUCT.habits.defaultColor);
+  const [icon, setIcon] = useState<string>(PRODUCT.habits.defaultIcon);
   const [days, setDays] = useState<IsoWeekday[]>([1, 2, 3, 4, 5]);
   const [due, setDue] = useState<'none' | 'today' | 'tomorrow'>('none');
   const [reminder, setReminder] = useState('');
   const [loading, setLoading] = useState(false);
-  const canSave = title.trim() !== '' && (kind === 'task' || isReminderValid(reminder));
-
-  const toggleDay = (day: IsoWeekday) => {
-    setDays((current) =>
-      current.includes(day) ? current.filter((value) => value !== day) : [...current, day].sort(),
-    );
-  };
+  const canSave =
+    normalizeHabitTitle(title) !== null && (kind === 'task' || (days.length > 0 && isReminderValid(reminder)));
 
   const save = async () => {
     if (!canSave) return;
@@ -42,8 +43,7 @@ export default function NewQuestScreen() {
       const id = newId();
       if (kind === 'task') {
         const today = toLocalDate(systemClock.now());
-        const dueDate =
-          due === 'today' ? today : due === 'tomorrow' ? addDays(today, 1) : null;
+        const dueDate = due === 'today' ? today : due === 'tomorrow' ? addDays(today, 1) : null;
         await createTaskQuest(db, systemClock, {
           id,
           title: title.trim(),
@@ -57,7 +57,9 @@ export default function NewQuestScreen() {
           systemClock,
           {
             id,
-            title: title.trim(),
+            title,
+            color,
+            icon,
             categoryId: null,
             weekdaysMask: maskFromWeekdays(days),
             reminderTime: reminderValue(reminder),
@@ -83,42 +85,45 @@ export default function NewQuestScreen() {
           onChange={setKind}
         />
         <Panel alpha={panelAlpha.quests} style={styles.panel}>
-          <Text style={styles.label}>{en.quests.taskTitle}</Text>
-          <TextInput
-            value={title}
-            onChangeText={setTitle}
-            style={styles.input}
-            placeholderTextColor={colors.textFaint}
-            maxLength={120}
-          />
           {kind === 'task' ? (
-            <SegmentedControl
-              options={[
-                { value: 'none', label: en.quests.noDueDate },
-                { value: 'today', label: en.quests.dueToday },
-                { value: 'tomorrow', label: en.quests.dueTomorrow },
-              ]}
-              value={due}
-              onChange={setDue}
-            />
+            <>
+              <Text style={styles.label}>{en.quests.taskTitle}</Text>
+              <TextInput
+                value={title}
+                onChangeText={setTitle}
+                style={styles.input}
+                placeholderTextColor={colors.textFaint}
+                maxLength={PRODUCT.habits.maxTitleLength}
+                accessibilityLabel={en.quests.taskTitle}
+              />
+              <Text style={styles.label}>{en.quests.dueDate}</Text>
+              <SegmentedControl
+                options={[
+                  { value: 'none', label: en.quests.noDueDate },
+                  { value: 'today', label: en.quests.dueToday },
+                  { value: 'tomorrow', label: en.quests.dueTomorrow },
+                ]}
+                value={due}
+                onChange={setDue}
+              />
+            </>
           ) : (
             <>
-              <View style={styles.days}>
-                {en.weekdays.short.map((label, index) => {
-                  const day = (index + 1) as IsoWeekday;
-                  const selected = days.includes(day);
-                  return (
-                    <Text
-                      key={label}
-                      onPress={() => toggleDay(day)}
-                      style={[styles.dayChip, selected && styles.dayChipOn]}
-                    >
-                      {label}
-                    </Text>
-                  );
-                })}
+              <HabitStyleFields
+                title={title}
+                onTitleChange={setTitle}
+                color={color}
+                onColorChange={setColor}
+                icon={icon}
+                onIconChange={setIcon}
+              />
+              <View style={styles.group}>
+                <Text style={styles.label}>{en.quests.habitDays}</Text>
+                <WeekdayPicker value={days} onChange={setDays} />
               </View>
-              <ReminderField value={reminder} onChange={setReminder} />
+              <View style={styles.group}>
+                <ReminderField value={reminder} onChange={setReminder} />
+              </View>
             </>
           )}
         </Panel>
@@ -131,28 +136,17 @@ export default function NewQuestScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: space.md, paddingVertical: space.sm, gap: space.lg },
-  panel: { gap: space.md },
-  label: { ...type.label, color: colors.textMuted },
+  panel: { gap: space.sm },
+  group: { gap: space.sm },
+  label: { ...type.label, color: colors.textMuted, marginTop: space.xs },
   input: {
     ...type.body,
     color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 6,
-    padding: space.md,
-    minHeight: 44,
-  },
-  days: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  dayChip: {
-    ...type.caption,
-    color: colors.textMuted,
+    minHeight: touch.min,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 6,
-    minWidth: 44,
-    textAlign: 'center',
+    borderWidth: border.thin,
+    borderColor: colors.cellBorder,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(10,18,36,0.6)',
   },
-  dayChipOn: { borderColor: colors.borderStrong, color: colors.actionBright },
 });

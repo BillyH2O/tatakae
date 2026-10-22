@@ -66,6 +66,37 @@ export const PRODUCT = {
     homeListMax: 3,
     occurrenceHorizonDays: 14,
   },
+  habits: {
+    // HYPOTHÈSE PRODUIT — modifiable : palette proposée pour la couleur d'une habitude.
+    colorPalette: ['#4C9BFF', '#7C6CFF', '#38C6D9', '#4FD18B', '#E2B144', '#F28C5B', '#E57AA8', '#FF6B6B'],
+    // HYPOTHÈSE PRODUIT — modifiable : icônes proposées pour une habitude (clés MaterialCommunityIcons).
+    iconChoices: [
+      'repeat',
+      'book-open-variant',
+      'dumbbell',
+      'run',
+      'bike',
+      'walk',
+      'meditation',
+      'water',
+      'sleep',
+      'food-apple',
+      'pencil',
+      'code-tags',
+      'music',
+      'brush',
+      'broom',
+      'heart-pulse',
+      'white-balance-sunny',
+      'coffee',
+      'translate',
+      'laptop',
+    ],
+    // Apparence d'une habitude créée sans choix explicite (et des habitudes d'avant la migration 002).
+    defaultColor: '#4C9BFF',
+    defaultIcon: 'repeat',
+    maxTitleLength: 120,
+  },
   categories: {
     homeTopN: 3,
     // HYPOTHÃˆSE PRODUIT â€” modifiable : palette for new categories (MaterialCommunityIcons keys below).

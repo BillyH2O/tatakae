@@ -1,15 +1,22 @@
 import type { RadarSession } from '../../domain/radar';
+import type { StatsScope } from '../../domain/stats';
 import type { CategoryFocus } from '../../domain/totals';
 import type { DayFocus, LocalDate } from '../../domain/types';
 import type { SqlDb } from '../SqlDb';
+import { scopeClause } from './scope';
 
 /** Focus seconds per local day of finalized, counted sessions (ARCHITECTURE.md §3.5). */
-export async function listFocusByDay(db: SqlDb, from: LocalDate, to: LocalDate): Promise<DayFocus[]> {
+export async function listFocusByDay(
+  db: SqlDb,
+  from: LocalDate,
+  to: LocalDate,
+  scope: StatsScope = 'all',
+): Promise<DayFocus[]> {
   const rows = await db.all<{ local_date: string; focused_sec: number }>(
     `SELECT seg.local_date, SUM(seg.focused_sec) AS focused_sec
      FROM session_day_segments seg
      JOIN sessions s ON s.id = seg.session_id
-     WHERE seg.local_date BETWEEN ? AND ? AND s.status IN ('completed', 'stopped')
+     WHERE seg.local_date BETWEEN ? AND ? AND s.status IN ('completed', 'stopped') AND ${scopeClause(scope)}
      GROUP BY seg.local_date
      ORDER BY seg.local_date`,
     [from, to],

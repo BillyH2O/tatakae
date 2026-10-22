@@ -7,6 +7,18 @@ import type { DailyGoalVersion, LocalDate, WeeklyGoalVersion } from './types';
 
 export type StatsPeriod = 'week' | 'month';
 
+/** Which sessions the Stats data covers: everything, only habit sessions, or the rest (tasks and free sessions). */
+export type StatsScope = 'all' | 'habits' | 'other';
+
+export function parseScope(value: string | undefined): StatsScope {
+  return value === 'habits' || value === 'other' ? value : 'all';
+}
+
+export function sessionInScope(scope: StatsScope, session: { habitOccurrenceId: string | null }): boolean {
+  if (scope === 'all') return true;
+  return (session.habitOccurrenceId !== null) === (scope === 'habits');
+}
+
 export interface PeriodRange {
   period: StatsPeriod;
   from: LocalDate;

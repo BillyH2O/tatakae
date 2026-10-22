@@ -27,6 +27,8 @@ import {
 import { getTimerSettings } from '../../services/settingsService';
 import { Button } from '../../ui/components/Button';
 import { EmptyState } from '../../ui/components/EmptyState';
+import { FilterChips } from '../../ui/components/FilterChips';
+import { HabitBadge } from '../../ui/components/HabitBadge';
 import { Panel } from '../../ui/components/Panel';
 import { QuestCard } from '../../ui/components/QuestCard';
 import { QuestGroup, QuestRow } from '../../ui/components/QuestRow';
@@ -35,6 +37,14 @@ import { TabScene } from '../../ui/components/TabScene';
 import { border, colors, panelAlpha, space, type } from '../../ui/theme/tokens';
 
 type QuestTab = 'today' | 'all';
+/** Daily quests (habits) versus ephemeral ones (one-off tasks). */
+type KindFilter = 'all' | 'habits' | 'tasks';
+
+const KIND_OPTIONS = [
+  { value: 'all', label: en.quests.filter.all },
+  { value: 'habits', label: en.quests.filter.habits },
+  { value: 'tasks', label: en.quests.filter.tasks },
+] as const;
 
 const rowKey = (row: QuestRowModel) => (row.kind === 'task' ? row.task.id : row.occurrence.id);
 
@@ -49,6 +59,9 @@ export default function QuestsScreen() {
   const router = useRouter();
   const today = useToday();
   const [tab, setTab] = useState<QuestTab>('today');
+  const [kindFilter, setKindFilter] = useState<KindFilter>('all');
+  const showTasks = kindFilter !== 'habits';
+  const showHabits = kindFilter !== 'tasks';
 
   useEffect(() => {
     void ensureOccurrenceHorizon(db, systemClock, newId).then(() =>
@@ -145,6 +158,8 @@ export default function QuestsScreen() {
   const todayTasks = todayRows.filter((row) => row.kind === 'task');
   const todayHabits = todayRows.filter((row) => row.kind === 'habit');
   const mission = view?.mission ?? null;
+  const missionVisible =
+    mission !== null && (kindFilter === 'all' || (kindFilter === 'habits') === (mission.kind === 'habit'));
 
   return (
     <TabScene>
@@ -161,6 +176,12 @@ export default function QuestsScreen() {
             value={tab}
             onChange={setTab}
           />
+          <FilterChips
+            options={KIND_OPTIONS}
+            value={kindFilter}
+            onChange={setKindFilter}
+            accessibilityLabel={en.quests.filter.a11y}
+          />
 
           {tab === 'today' && view ? (
             todayRows.length === 0 && !mission ? (
@@ -171,9 +192,15 @@ export default function QuestsScreen() {
               />
             ) : (
               <>
+                {kindFilter === 'all' || missionVisible ? (
                 <Section title={en.quests.priorityMission}>
-                  {mission ? (
+                  {mission && missionVisible ? (
                     <QuestCard
+                        leading={
+                          mission.kind === 'habit' ? (
+                            <HabitBadge icon={mission.habit.icon} color={mission.habit.color} size={40} />
+                          ) : undefined
+                        }
                         onPress={() => open(mission)}
                         title={mission.kind === 'task' ? mission.task.title : mission.habit.title}
                         subtitle={categoryName(mission.kind === 'task' ? mission.task.categoryId : mission.habit.categoryId)}
@@ -194,60 +221,72 @@ export default function QuestsScreen() {
                     <Text style={styles.hint}>{en.quests.missionHint}</Text>
                   )}
                 </Section>
+                ) : null}
 
-                <Section title={en.quests.tasks}>
-                  {todayTasks.length > 0 ? (
-                    <QuestGroup>{renderRows(todayTasks)}</QuestGroup>
-                  ) : (
-                    <Text style={styles.hint}>{en.quests.noTasks}</Text>
-                  )}
-                </Section>
+                {showTasks ? (
+                  <Section title={en.quests.tasks}>
+                    {todayTasks.length > 0 ? (
+                      <QuestGroup>{renderRows(todayTasks)}</QuestGroup>
+                    ) : (
+                      <Text style={styles.hint}>{en.quests.noTasks}</Text>
+                    )}
+                  </Section>
+                ) : null}
 
-                <Section title={en.quests.habits}>
-                  {todayHabits.length > 0 ? (
-                    <QuestGroup>{renderRows(todayHabits)}</QuestGroup>
-                  ) : (
-                    <Text style={styles.hint}>{en.quests.noHabits}</Text>
-                  )}
-                </Section>
+                {showHabits ? (
+                  <Section title={en.quests.habits}>
+                    {todayHabits.length > 0 ? (
+                      <QuestGroup>{renderRows(todayHabits)}</QuestGroup>
+                    ) : (
+                      <Text style={styles.hint}>{en.quests.noHabits}</Text>
+                    )}
+                  </Section>
+                ) : null}
               </>
             )
           ) : null}
 
           {tab === 'all' ? (
             <>
-              <Section title={en.quests.tasks}>
-                {allOpenTasks.length > 0 ? (
-                  <QuestGroup>{renderRows(allOpenTasks.map((task) => ({ kind: 'task', task, overdue: false })))}</QuestGroup>
-                ) : (
-                  <Text style={styles.hint}>{en.quests.noTasks}</Text>
-                )}
-              </Section>
-              <Section title={en.quests.habits}>
-                {activeHabits.length > 0 ? (
-                  <QuestGroup>
-                    {activeHabits.map((habit, index) => (
-                      <Pressable
-                        key={habit.id}
-                        onPress={() => router.push({ pathname: '/quest/habit/[id]', params: { id: habit.id } })}
-                        style={({ pressed }) => [styles.habitRow, index > 0 && styles.separated, pressed && styles.pressed]}
-                        accessibilityRole="button"
-                      >
-                        <MaterialCommunityIcons name="repeat" size={22} color={colors.actionBright} />
-                        <Text style={styles.habitTitle} numberOfLines={1}>
-                          {habit.title}
-                        </Text>
-                        <Text style={styles.habitDays} numberOfLines={1}>
-                          {habitDays(habit)}
-                        </Text>
-                        <MaterialCommunityIcons name="chevron-right" size={22} color={colors.textMuted} />
-                      </Pressable>
-                    ))}
-                  </QuestGroup>
-                ) : (
-                  <Text style={styles.hint}>{en.quests.noHabits}</Text>
-                )}
-              </Section>
+              {showTasks ? (
+                <Section title={en.quests.tasks}>
+                  {allOpenTasks.length > 0 ? (
+                    <QuestGroup>
+                      {renderRows(allOpenTasks.map((task) => ({ kind: 'task', task, overdue: false })))}
+                    </QuestGroup>
+                  ) : (
+                    <Text style={styles.hint}>{en.quests.noTasks}</Text>
+                  )}
+                </Section>
+              ) : null}
+              {showHabits ? (
+                <Section title={en.quests.habits}>
+                  {activeHabits.length > 0 ? (
+                    <QuestGroup>
+                      {activeHabits.map((habit, index) => (
+                        <Pressable
+                          key={habit.id}
+                          onPress={() => router.push({ pathname: '/quest/habit/[id]', params: { id: habit.id } })}
+                          style={({ pressed }) => [styles.habitRow, index > 0 && styles.separated, pressed && styles.pressed]}
+                          accessibilityRole="button"
+                          accessibilityLabel={habit.title}
+                        >
+                          <HabitBadge icon={habit.icon} color={habit.color} size={28} />
+                          <Text style={styles.habitTitle} numberOfLines={1}>
+                            {habit.title}
+                          </Text>
+                          <Text style={styles.habitDays} numberOfLines={1}>
+                            {habitDays(habit)}
+                          </Text>
+                          <MaterialCommunityIcons name="chevron-right" size={22} color={colors.textMuted} />
+                        </Pressable>
+                      ))}
+                    </QuestGroup>
+                  ) : (
+                    <Text style={styles.hint}>{en.quests.noHabits}</Text>
+                  )}
+                </Section>
+              ) : null}
             </>
           ) : null}
 

@@ -2,7 +2,7 @@ import { StyleSheet, Text, TextInput } from 'react-native';
 
 import { parseReminderTime } from '../../domain/notifications';
 import { en } from '../../i18n/en';
-import { colors, space, type } from '../theme/tokens';
+import { border, colors, radius, space, touch, type } from '../theme/tokens';
 
 /** Empty means "no reminder"; otherwise a 24 h `HH:MM` local time. */
 export function isReminderValid(text: string): boolean {
@@ -44,11 +44,12 @@ const styles = StyleSheet.create({
   input: {
     ...type.body,
     color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 6,
-    padding: space.md,
-    minHeight: 44,
+    borderWidth: border.thin,
+    borderColor: colors.cellBorder,
+    borderRadius: radius.md,
+    paddingHorizontal: space.md,
+    minHeight: touch.min,
+    backgroundColor: 'rgba(10,18,36,0.6)',
   },
   invalid: { borderColor: colors.danger },
   error: { ...type.caption, color: colors.danger },

@@ -4,14 +4,25 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PRODUCT } from '../../config/product';
-import { hasAnyFocus, isCurrentPeriod, parsePeriod, periodRange, shiftAnchor, type StatsPeriod } from '../../domain/stats';
+import {
+  hasAnyFocus,
+  isCurrentPeriod,
+  parsePeriod,
+  parseScope,
+  periodRange,
+  shiftAnchor,
+  type StatsPeriod,
+  type StatsScope,
+} from '../../domain/stats';
 import { asLocalDate } from '../../domain/time/localDate';
-import { useHeatmap, useSessionHistory, useStatsView, type StatsView } from '../../hooks/useStats';
+import { useHabitRegularity, useHeatmap, useSessionHistory, useStatsView, type StatsView } from '../../hooks/useStats';
 import { useToday } from '../../hooks/useToday';
 import { en, formatDuration, formatMonthYear, formatWeekRange } from '../../i18n/en';
 import { BarChart } from '../../ui/components/BarChart';
 import { Button } from '../../ui/components/Button';
 import { CategoryBars } from '../../ui/components/CategoryBars';
+import { FilterChips } from '../../ui/components/FilterChips';
+import { HabitRegularityCard } from '../../ui/components/HabitRegularityCard';
 import { Heatmap } from '../../ui/components/Heatmap';
 import { Panel } from '../../ui/components/Panel';
 import { ProgressBar } from '../../ui/components/ProgressBar';
@@ -27,22 +38,30 @@ const PERIOD_OPTIONS = [
   { value: 'week', label: en.stats.periodTabs.week },
   { value: 'month', label: en.stats.periodTabs.month },
 ] as const;
+const SCOPE_OPTIONS = [
+  { value: 'all', label: en.stats.scope.all },
+  { value: 'habits', label: en.stats.scope.habits },
+  { value: 'other', label: en.stats.scope.other },
+] as const;
 
 /** Statistics: one card holding quiet cells (as on the reference mockup), blue only, cyan for figures. */
 export default function StatsScreen() {
   const router = useRouter();
   const today = useToday();
-  const params = useLocalSearchParams<{ period?: string; anchor?: string }>();
+  const params = useLocalSearchParams<{ period?: string; anchor?: string; scope?: string }>();
   const period = parsePeriod(params.period);
+  const scope = parseScope(params.scope);
   const anchor = params.anchor && DATE_PARAM.test(params.anchor) ? asLocalDate(params.anchor) : today;
 
   const range = useMemo(() => periodRange(period, anchor), [period, anchor]);
-  const view = useStatsView(range, today);
+  const view = useStatsView(range, today, scope);
   const heatmap = useHeatmap(today);
-  const lastSession = useSessionHistory(1)?.items[0];
+  const habitViews = useHabitRegularity(today);
+  const lastSession = useSessionHistory(1, scope)?.items[0];
 
   const go = (nextPeriod: StatsPeriod, nextAnchor: string) =>
-    router.setParams({ period: nextPeriod, anchor: nextAnchor });
+    router.setParams({ period: nextPeriod, anchor: nextAnchor, scope });
+  const setScope = (next: StatsScope) => router.setParams({ scope: next });
   const isCurrent = isCurrentPeriod(range, today);
   const label = period === 'month' ? formatMonthYear(range.from) : formatWeekRange(range.from, range.to);
 
@@ -60,6 +79,9 @@ export default function StatsScreen() {
             onChange={(next) => go(next, today)}
             accessibilityLabel={en.stats.periodA11y}
           />
+
+          <FilterChips options={SCOPE_OPTIONS} value={scope} onChange={setScope} accessibilityLabel={en.stats.scope.a11y} />
+          {scope === 'all' ? null : <Text style={styles.caption}>{en.stats.scope.hint[scope]}</Text>}
 
           <Panel variant="cell" style={styles.nav}>
             <NavButton icon="chevron-left" label={en.stats.previous} onPress={() => go(period, shiftAnchor(period, anchor, -1))} />
@@ -101,7 +123,7 @@ export default function StatsScreen() {
             </Panel>
           )}
 
-          {view === undefined ? null : <WeeklyGoal weeks={view.weeks} />}
+          {view === undefined || scope !== 'all' ? null : <WeeklyGoal weeks={view.weeks} />}
 
           {view === undefined ? null : (
             <Panel variant="cell" style={styles.cell}>
@@ -116,7 +138,33 @@ export default function StatsScreen() {
             </Panel>
           )}
 
-          {heatmap ? (
+          {scope === 'habits' ? (
+            <Panel variant="cell" style={styles.cell}>
+              <View style={styles.cellHead}>
+                <Text style={styles.cellTitle} accessibilityRole="header">
+                  {en.stats.habits.title}
+                </Text>
+                <Text style={styles.caption}>{en.stats.habits.subtitle(PRODUCT.stats.heatmapWeeks)}</Text>
+              </View>
+              {habitViews === undefined ? (
+                <Text style={styles.caption}>{en.stats.loading}</Text>
+              ) : habitViews.length === 0 ? (
+                <Text style={styles.empty}>{en.stats.habits.empty}</Text>
+              ) : (
+                habitViews.map((habitView, index) => (
+                  <View key={habitView.habit.id} style={index > 0 ? styles.habitDivided : undefined}>
+                    <HabitRegularityCard
+                      view={habitView}
+                      today={today}
+                      onPress={() => router.push({ pathname: '/quest/habit/[id]', params: { id: habitView.habit.id } })}
+                    />
+                  </View>
+                ))
+              )}
+            </Panel>
+          ) : null}
+
+          {scope === 'all' && heatmap ? (
             <Panel variant="cell" style={styles.cell}>
               <View style={styles.cellHead}>
                 <Text style={styles.cellTitle} accessibilityRole="header">
@@ -239,5 +287,6 @@ const styles = StyleSheet.create({
   weekRow: { gap: 6 },
   value: { ...type.label, color: colors.text, fontWeight: '700', fontVariant: ['tabular-nums'] },
   percent: { ...type.caption, color: colors.textMuted, textAlign: 'right', fontVariant: ['tabular-nums'] },
+  habitDivided: { borderTopWidth: 1, borderTopColor: colors.divider, paddingTop: space.md },
   actions: { gap: space.sm },
 });

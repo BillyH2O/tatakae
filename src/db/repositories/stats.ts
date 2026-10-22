@@ -1,17 +1,19 @@
 import type { CategoryFocus } from '../../domain/totals';
-import type { CountedSession, SessionHistoryItem } from '../../domain/stats';
+import type { CountedSession, SessionHistoryItem, StatsScope } from '../../domain/stats';
 import type { LocalDate } from '../../domain/types';
 import type { SqlDb } from '../SqlDb';
+import { scopeClause } from './scope';
 
 /** Counted (completed or stopped) sessions that started in [fromMs, toMs): the count/average of Stats. */
 export async function listCountedSessionsStartedBetween(
   db: SqlDb,
   fromMs: number,
   toMs: number,
+  scope: StatsScope = 'all',
 ): Promise<CountedSession[]> {
   const rows = await db.all<{ started_at: number; focused_sec: number }>(
     `SELECT started_at, focused_sec FROM sessions
-     WHERE status IN ('completed', 'stopped') AND started_at >= ? AND started_at < ?
+     WHERE status IN ('completed', 'stopped') AND started_at >= ? AND started_at < ? AND ${scopeClause(scope, 'sessions')}
      ORDER BY started_at`,
     [fromMs, toMs],
   );
@@ -23,12 +25,13 @@ export async function listFocusByCategoryBetween(
   db: SqlDb,
   from: LocalDate,
   to: LocalDate,
+  scope: StatsScope = 'all',
 ): Promise<CategoryFocus[]> {
   const rows = await db.all<{ category_id: string | null; focused_sec: number }>(
     `SELECT s.category_id, SUM(seg.focused_sec) AS focused_sec
      FROM session_day_segments seg
      JOIN sessions s ON s.id = seg.session_id
-     WHERE seg.local_date BETWEEN ? AND ? AND s.status IN ('completed', 'stopped')
+     WHERE seg.local_date BETWEEN ? AND ? AND s.status IN ('completed', 'stopped') AND ${scopeClause(scope)}
      GROUP BY s.category_id`,
     [from, to],
   );
@@ -79,10 +82,10 @@ const toHistoryItem = (row: HistoryRow): SessionHistoryItem => ({
 });
 
 /** Newest first. Fetch `limit + 1` to know whether there is a next page. */
-export async function listSessionHistory(db: SqlDb, limit: number): Promise<SessionHistoryItem[]> {
+export async function listSessionHistory(db: SqlDb, limit: number, scope: StatsScope = 'all'): Promise<SessionHistoryItem[]> {
   const rows = await db.all<HistoryRow>(
     `${HISTORY_SELECT}
-     WHERE s.status IN ('completed', 'stopped')
+     WHERE s.status IN ('completed', 'stopped') AND ${scopeClause(scope)}
      ORDER BY s.started_at DESC, s.id
      LIMIT ?`,
     [limit],

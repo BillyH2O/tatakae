@@ -76,3 +76,71 @@ export function habitWeekProgress(
   }
   return { done, planned };
 }
+/** Cell of a habit regularity grid. `pending` = planned today, not done yet; `upcoming` = planned later. */
+export type HabitHeatState = 'done' | 'missed' | 'pending' | 'upcoming' | 'rest' | 'absent';
+
+export interface HabitHeatCell {
+  date: LocalDate;
+  state: HabitHeatState;
+}
+
+/**
+ * GitHub-style regularity grid of one habit: `weeks` columns of seven cells (Monday → Sunday),
+ * oldest week first, the current week last. Same rules as the habit calendar.
+ */
+export function habitRegularityGrid(
+  habit: HabitSchedule,
+  occurrences: readonly Pick<HabitOccurrence, 'localDate' | 'status'>[],
+  today: LocalDate,
+  weeks: number,
+): HabitHeatCell[][] {
+  const byDate = new Map(occurrences.map((occurrence) => [occurrence.localDate, occurrence]));
+  const from = addDays(weekStart(today), -(weeks - 1) * 7);
+  return Array.from({ length: weeks }, (_, week) =>
+    Array.from({ length: 7 }, (_, day) => {
+      const date = addDays(from, week * 7 + day);
+      const state = habitCalendarState(date, habit, byDate.get(date) ?? null, today);
+      const heat: HabitHeatState =
+        state === 'planned' ? (date === today ? 'pending' : 'upcoming') : state;
+      return { date, state: heat };
+    }),
+  );
+}
+
+export interface HabitRegularity {
+  /** Planned days up to today that are done / counted (today counts only once done). */
+  done: number;
+  planned: number;
+  /** Whole percent of planned days done, or null before any planned day. */
+  ratePercent: number | null;
+  /** Consecutive planned days done, ending today (or yesterday while today is still pending). */
+  currentStreak: number;
+  bestStreak: number;
+}
+
+/** Totals over a regularity grid: only past days and today if done count (an unfinished today is not a miss). */
+export function habitRegularity(grid: readonly (readonly HabitHeatCell[])[]): HabitRegularity {
+  let done = 0;
+  let planned = 0;
+  let run = 0;
+  let best = 0;
+  for (const cell of grid.flat()) {
+    if (cell.state === 'done') {
+      done += 1;
+      planned += 1;
+      run += 1;
+      best = Math.max(best, run);
+    } else if (cell.state === 'missed') {
+      planned += 1;
+      run = 0;
+    }
+    // pending / upcoming / rest / absent never break or extend a streak.
+  }
+  return {
+    done,
+    planned,
+    ratePercent: planned > 0 ? Math.floor((done / planned) * 100) : null,
+    currentStreak: run,
+    bestStreak: best,
+  };
+}

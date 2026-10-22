@@ -265,3 +265,12 @@ Conventions that override this document (see `ARCHITECTURE.md` §11): routes liv
 **Tests:** export (structure), reset (empty DB afterwards), `seedDemo` only on the demo DB (guard: refuses if `activeDb !== demo`), demo ↔ real switch without loss.
 
 **Risks:** demo mode leaking into the real DB (service-level guard); closing/reopening the DB during an active session (forbid switching while a session is active).
+
+---
+
+## step-09d-habits
+
+**Goals:** habits with name, colour and icon; Quests and Stats filters; GitHub-style regularity grid per habit.
+
+**Content:** migration 002 (habits.color, habits.icon), PRODUCT.habits, habitStyle domain, Quests filter (All / Daily habits / One-off tasks), Stats scope (All / Habits / Other, also in history), per-habit regularity grid in Stats (Habits scope) and on the habit detail (editable name/colour/icon/days).
+

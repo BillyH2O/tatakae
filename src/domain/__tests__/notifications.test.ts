@@ -6,6 +6,8 @@ import type { Habit, IsoWeekday } from '../types';
 function habit(partial: Partial<Habit> & { id: string }): Habit {
   return {
     title: partial.id,
+    color: '#4C9BFF',
+    icon: 'repeat',
     categoryId: null,
     weekdaysMask: maskFromWeekdays([1, 3, 5]),
     reminderTime: '08:30',

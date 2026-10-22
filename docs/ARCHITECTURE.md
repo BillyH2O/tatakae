@@ -328,6 +328,8 @@ Insertion initiale (dans la même migration, idempotente) : `wallets('crystal')`
 - `migrations/index.ts` : tableau ordonné `{ version: number; name: string; up(tx: SqlDb): Promise<void> }`.
 - `migrate(db)` : lit `PRAGMA user_version` ; pour chaque migration > version : transaction → `up` → `PRAGMA user_version = N` (dans la même transaction) ; erreur → rollback + écran d'erreur « Impossible d'ouvrir vos données » (avec export brut du fichier .db possible). `journal_mode` hors transaction.
 - Appelé par `SQLiteProvider onInit` (avec `useSuspense` + écran de chargement).
+- Migration 002 (`002_habit_style.ts`) : `habits.color` et `habits.icon` (NOT NULL, valeurs par défaut) ; les choix sont validés par le domaine (`resolveHabitStyle`, palette dans `PRODUCT.habits`), pas par SQL.
+- Filtre de portée des stats (`all | habits | other`) : une session est « habitude » si `habit_occurrence_id IS NOT NULL` (`db/repositories/scope.ts`), appliqué à `useFocusTotals` / `useStatsView` / historique. Grille de régularité par habitude : `habitRegularityGrid` / `habitRegularity` (domaine pur).
 - Règle : une migration livrée n'est jamais modifiée ; uniquement additive. Test : base vide → dernière version ; base v1 avec données → vN conserve les données.
 
 ### 3.4 Adaptateur et transactions

@@ -1,3 +1,4 @@
+import { resolveHabitStyle } from '../domain/habitStyle';
 import type {
   Category,
   DailyGoalVersion,
@@ -107,6 +108,8 @@ export interface TaskRow {
 export interface HabitRow {
   id: string;
   title: string;
+  color: string;
+  icon: string;
   category_id: string | null;
   weekdays_mask: number;
   reminder_time: string | null;
@@ -143,6 +146,7 @@ export const toTask = (row: TaskRow): Task => ({
 export const toHabit = (row: HabitRow): Habit => ({
   id: row.id,
   title: row.title,
+  ...resolveHabitStyle(row),
   categoryId: row.category_id,
   weekdaysMask: row.weekdays_mask,
   reminderTime: row.reminder_time,

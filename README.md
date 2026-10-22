@@ -140,5 +140,11 @@ habitudes en listes groupées ; la case ronde s'anime quand on coche (remplissag
 quête, anneau lumineux, Pause / Terminer côte à côte. La barre d'onglets est affichée sur tous les écrans, y compris
 Focus et les réglages. Vérifié sur le web uniquement (animations et retour haptique non testés sur appareil).
 
+Habitudes : chaque habitude a un nom, une couleur et une icône (palette et icônes dans `PRODUCT.habits`,
+modifiables depuis la fiche de l'habitude). Quêtes : filtre Toutes / Habitudes quotidiennes / Tâches ponctuelles.
+Stats : filtre Tout / Habitudes / Autres (Autres = tâches + sessions libres), appliqué aussi à l'historique ; en vue
+Habitudes, une grille de régularité façon GitHub (18 semaines) par habitude, à sa couleur, aussi sur sa fiche.
+Les objectifs, le score et la heatmap globale ne s'affichent que dans la vue Tout.
+
 Le fond paysage (`assets/images/landscape.jpg`) est une illustration anime originale générée par IA
 pour ce projet (aucune franchise, aucun personnage, pas de pixel art).

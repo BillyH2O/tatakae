@@ -1,5 +1,6 @@
 import { isoWeekday } from '../../domain/time/localDate';
 import { maskHasWeekday } from '../../domain/habits';
+import { resolveHabitStyle } from '../../domain/habitStyle';
 import type { Habit, HabitOccurrence, LocalDate } from '../../domain/types';
 import type { SqlDb } from '../SqlDb';
 import { type HabitRow, type OccurrenceRow, toHabit, toOccurrence } from '../rows';
@@ -18,6 +19,9 @@ export async function getHabit(db: SqlDb, id: string): Promise<Habit | null> {
 export interface NewHabit {
   id: string;
   title: string;
+  /** Optional: an invalid or missing value becomes the default look. */
+  color?: string;
+  icon?: string;
   categoryId: string | null;
   weekdaysMask: number;
   reminderTime: string | null;
@@ -25,12 +29,15 @@ export interface NewHabit {
 }
 
 export async function createHabit(db: SqlDb, input: NewHabit, now: number): Promise<void> {
+  const style = resolveHabitStyle(input);
   await db.run(
-    `INSERT INTO habits (id, title, category_id, weekdays_mask, reminder_time, status, start_local_date, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?)`,
+    `INSERT INTO habits (id, title, color, icon, category_id, weekdays_mask, reminder_time, status, start_local_date, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)`,
     [
       input.id,
       input.title.trim(),
+      style.color,
+      style.icon,
       input.categoryId,
       input.weekdaysMask,
       input.reminderTime,
@@ -46,6 +53,8 @@ export async function updateHabit(
   id: string,
   patch: {
     title?: string;
+    color?: string;
+    icon?: string;
     categoryId?: string | null;
     weekdaysMask?: number;
     reminderTime?: string | null;
@@ -54,10 +63,13 @@ export async function updateHabit(
 ): Promise<void> {
   const current = await getHabit(db, id);
   if (!current) throw new Error('Habit not found');
+  const style = resolveHabitStyle({ color: patch.color ?? current.color, icon: patch.icon ?? current.icon });
   await db.run(
-    `UPDATE habits SET title = ?, category_id = ?, weekdays_mask = ?, reminder_time = ?, updated_at = ? WHERE id = ?`,
+    `UPDATE habits SET title = ?, color = ?, icon = ?, category_id = ?, weekdays_mask = ?, reminder_time = ?, updated_at = ? WHERE id = ?`,
     [
       (patch.title ?? current.title).trim(),
+      style.color,
+      style.icon,
       patch.categoryId === undefined ? current.categoryId : patch.categoryId,
       patch.weekdaysMask ?? current.weekdaysMask,
       patch.reminderTime === undefined ? current.reminderTime : patch.reminderTime,

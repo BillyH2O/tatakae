@@ -24,6 +24,7 @@ import {
 import { appStateRepo } from '../db/repositories/keyValue';
 import type { SqlDb } from '../db/SqlDb';
 import { occurrenceDatesToEnsure } from '../domain/habits';
+import { normalizeHabitTitle } from '../domain/habitStyle';
 import { parseReminderTime } from '../domain/notifications';
 import { sanitizePriorityMission } from '../domain/quests';
 import { addDays, toLocalDate } from '../domain/time/localDate';
@@ -109,18 +110,22 @@ export async function createHabitQuest(
   input: {
     id: string;
     title: string;
+    color?: string;
+    icon?: string;
     categoryId: string | null;
     weekdaysMask: number;
     reminderTime: string | null;
   },
   newId: IdGenerator,
 ): Promise<void> {
+  const title = normalizeHabitTitle(input.title);
+  if (title === null) throw new Error('A habit needs a name');
   const today = toLocalDate(clock.now());
   const horizon = addDays(today, PRODUCT.quests.occurrenceHorizonDays);
   await db.transaction(async (tx) => {
     await createHabit(
       tx,
-      { ...input, startLocalDate: today },
+      { ...input, title, startLocalDate: today },
       clock.now(),
     );
     const habit = await getHabit(tx, input.id);
@@ -129,6 +134,21 @@ export async function createHabitQuest(
   });
   dataEvents.emit('quests');
   await resyncHabitReminders(db, clock, input.reminderTime !== null);
+}
+
+/** Renames a habit and changes its color / icon. History and occurrences are untouched. */
+export async function updateHabitDetails(
+  db: SqlDb,
+  clock: Clock,
+  habitId: string,
+  patch: { title: string; color: string; icon: string },
+): Promise<void> {
+  const title = normalizeHabitTitle(patch.title);
+  if (title === null) throw new Error('A habit needs a name');
+  await updateHabit(db, habitId, { title, color: patch.color, icon: patch.icon }, clock.now());
+  dataEvents.emit('quests');
+  // The reminder notification carries the habit name.
+  await resyncHabitReminders(db, clock, false);
 }
 
 /** Sets or clears (`null`) the weekly reminder of a habit; the time is validated by the caller. */

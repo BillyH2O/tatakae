@@ -29,6 +29,8 @@ export interface DemoSession {
 
 export interface DemoHabit {
   title: string;
+  color: string;
+  icon: string;
   categoryIndex: number;
   weekdaysMask: number;
   /** Planned dates already ticked (the ones linked to a session included). */
@@ -63,10 +65,10 @@ export interface DemoPlanInput {
 }
 
 const HABIT_DEFINITIONS = [
-  { title: 'Read 20 pages', categoryIndex: 2, weekdays: [1, 2, 3, 4, 5, 6, 7] },
-  { title: 'Workout', categoryIndex: 3, weekdays: [1, 3, 5] },
-  { title: 'Review my notes', categoryIndex: 0, weekdays: [1, 2, 3, 4, 5] },
-] as const satisfies readonly { title: string; categoryIndex: number; weekdays: readonly IsoWeekday[] }[];
+  { title: 'Read 20 pages', color: '#7C6CFF', icon: 'book-open-variant', categoryIndex: 2, weekdays: [1, 2, 3, 4, 5, 6, 7] },
+  { title: 'Workout', color: '#F28C5B', icon: 'dumbbell', categoryIndex: 3, weekdays: [1, 3, 5] },
+  { title: 'Review my notes', color: '#4FD18B', icon: 'pencil', categoryIndex: 0, weekdays: [1, 2, 3, 4, 5] },
+] as const satisfies readonly { title: string; color: string; icon: string; categoryIndex: number; weekdays: readonly IsoWeekday[] }[];
 
 // Offsets are in days relative to today (negative = past).
 const TASK_DEFINITIONS = [
@@ -178,6 +180,8 @@ export function planDemoData(input: DemoPlanInput): DemoPlan {
 
   const habits: DemoHabit[] = HABIT_DEFINITIONS.map((definition) => ({
     title: definition.title,
+    color: definition.color,
+    icon: definition.icon,
     categoryIndex: definition.categoryIndex % categoryCount,
     weekdaysMask: maskFromWeekdays(definition.weekdays),
     doneDates: [],

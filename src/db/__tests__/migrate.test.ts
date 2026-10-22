@@ -1,4 +1,5 @@
 /** @jest-environment node */
+import { PRODUCT } from '../../config/product';
 import { getSchemaVersion, migrate } from '../migrate';
 import { LATEST_SCHEMA_VERSION, MIGRATIONS } from '../migrations';
 import type { Migration } from '../migrations/types';
@@ -33,8 +34,8 @@ describe('migrations', () => {
     expect(await getSchemaVersion(db)).toBe(0);
     const version = await migrate(db, { now: T0 });
     expect(version).toBe(LATEST_SCHEMA_VERSION);
-    expect(version).toBe(1);
-    expect(await getSchemaVersion(db)).toBe(1);
+    expect(version).toBe(2);
+    expect(await getSchemaVersion(db)).toBe(2);
 
     const tables = await db.all<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -68,22 +69,33 @@ describe('migrations', () => {
       "INSERT INTO categories (id, name, icon, color, sort_order, created_at, updated_at) VALUES ('c1', 'Études', 'school', '#4C9BFF', 0, 1, 1)",
     );
     const v2: Migration = {
-      version: 2,
+      version: 3,
       name: 'add-note',
       up: async (tx) => {
         await tx.exec('ALTER TABLE categories ADD COLUMN note TEXT');
       },
     };
-    expect(await migrate(db, { migrations: [...MIGRATIONS, v2] })).toBe(2);
+    expect(await migrate(db, { migrations: [...MIGRATIONS, v2] })).toBe(3);
     const row = await db.get<{ name: string; note: string | null }>('SELECT name, note FROM categories');
     expect(row).toEqual({ name: 'Études', note: null });
+  });
+
+  it('002 gives existing habits the default color and icon without losing data', async () => {
+    const db = createNodeDb();
+    await migrate(db, { now: T0, migrations: MIGRATIONS.slice(0, 1) });
+    await db.run(
+      "INSERT INTO habits (id, title, weekdays_mask, start_local_date, created_at, updated_at) VALUES ('h1', 'Read', 127, '2026-10-22', 1, 1)",
+    );
+    expect(await migrate(db, { now: T0 })).toBe(2);
+    const row = await db.get<{ title: string; color: string; icon: string }>('SELECT title, color, icon FROM habits');
+    expect(row).toEqual({ title: 'Read', color: PRODUCT.habits.defaultColor, icon: PRODUCT.habits.defaultIcon });
   });
 
   it('rolls a failing migration back entirely, including user_version', async () => {
     const db = createNodeDb();
     await migrate(db, { now: T0 });
     const broken: Migration = {
-      version: 2,
+      version: 3,
       name: 'broken',
       up: async (tx) => {
         await tx.exec('CREATE TABLE half_done (id INTEGER)');
@@ -91,7 +103,7 @@ describe('migrations', () => {
       },
     };
     await expect(migrate(db, { migrations: [...MIGRATIONS, broken] })).rejects.toThrow();
-    expect(await getSchemaVersion(db)).toBe(1);
+    expect(await getSchemaVersion(db)).toBe(LATEST_SCHEMA_VERSION);
     const leftover = await db.get('SELECT name FROM sqlite_master WHERE name = ?', ['half_done']);
     expect(leftover).toBeNull();
   });
