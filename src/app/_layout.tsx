@@ -5,17 +5,30 @@ import { StyleSheet, View } from 'react-native';
 import { DbProvider } from '../db/DbProvider';
 import { AppHeader } from '../ui/components/AppHeader';
 import { ScreenBackground } from '../ui/components/ScreenBackground';
+import { ProfileGate } from '../ui/providers/ProfileGate';
 import { colors, veilForPath } from '../ui/theme/tokens';
 
-// Navigation containers paint their own background; make it transparent so the landscape shows through.
 const NAV_THEME = {
   ...DarkTheme,
   colors: { ...DarkTheme.colors, background: 'transparent', card: 'transparent' },
 };
 
-/** Reads the route on its own so navigation never re-renders the database provider. */
 function RouteBackground() {
   return <ScreenBackground veil={veilForPath(usePathname())} />;
+}
+
+function AppShell() {
+  const pathname = usePathname();
+  const showHeader = pathname !== '/onboarding' && !pathname.startsWith('/onboarding/');
+
+  return (
+    <>
+      {showHeader ? <AppHeader /> : null}
+      <View style={styles.body}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: styles.transparent }} />
+      </View>
+    </>
+  );
 }
 
 export default function RootLayout() {
@@ -25,10 +38,9 @@ export default function RootLayout() {
       <RouteBackground />
       <ThemeProvider value={NAV_THEME}>
         <DbProvider>
-          <AppHeader />
-          <View style={styles.body}>
-            <Stack screenOptions={{ headerShown: false, contentStyle: styles.transparent }} />
-          </View>
+          <ProfileGate>
+            <AppShell />
+          </ProfileGate>
         </DbProvider>
       </ThemeProvider>
     </View>

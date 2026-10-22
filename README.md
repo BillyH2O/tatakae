@@ -3,8 +3,8 @@
 Application mobile de **focus et d'habitudes** au thème RPG/anime bleu (Expo, React Native, TypeScript strict).
 Sans compte, hors ligne, données locales (SQLite). Interface en anglais, code en anglais.
 
-> Statut : étape 03 (shell et bandeau). Navigation à 4 onglets (Home, Quests, Stats, Profile) sur le paysage,
-> bandeau permanent branché sur SQLite ; le contenu des onglets est provisoire. Pas encore d'onboarding ni de réglages.
+> Statut : étape 04 (profil et réglages). Onboarding au premier lancement, écran Profil, réglages (objectifs,
+> catégories, durées timer). Home / Quêtes / Stats / Focus restent provisoires.
 > Les fonctionnalités arrivent étape par étape (une branche / PR par étape, empilées).
 
 ## Documentation
@@ -20,9 +20,10 @@ Sans compte, hors ligne, données locales (SQLite). Interface en anglais, code e
 - Domaine pur testé : dates locales (semaine ISO, DST), répartition des sessions à cheval sur minuit, objectifs datés, XP et niveaux.
 - Repositories : profil, catégories, objectifs, XP (anti double récompense), réglages, focus par jour.
 - Thème bleu (`src/ui/theme/tokens.ts`), paysage partagé assombri selon l'écran, barre d'onglets maison.
-- Bandeau permanent (~93 pt hors safe area sur web) : avatar (emblème original par défaut) → Profile, pseudo, niveau,
-  cristaux (solde réel, 0 ; aucune règle ni boutique), « Today » et « Week » (focus / objectif, barre si objectif) → Stats.
-  Sans profil (avant l'onboarding de l'étape suivante) : « Adventurer », niveau 1, focus sans objectif.
+- Onboarding : pseudo, photo facultative, objectifs quotidiens/hebdo, catégories seed en une transaction.
+- Profil : avatar, pseudo, niveau + barre XP, cristaux (lecture seule), stats cumulées, lien Réglages.
+- Réglages : objectifs versionnés (« Applies from today »), catégories (créer, renommer, archiver, réordonner), timer par défaut.
+- Bandeau permanent branché sur SQLite (pseudo réel après onboarding ; « Today / Week » avec objectifs).
 - Rien de natif n'est testé (iOS/Android) : seule la version web a été exécutée.
 
 ## Lancer le projet

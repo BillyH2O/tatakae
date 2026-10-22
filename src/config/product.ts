@@ -63,6 +63,27 @@ export const PRODUCT = {
   },
   categories: {
     homeTopN: 3,
+    // HYPOTHÈSE PRODUIT — modifiable : palette for new categories (MaterialCommunityIcons keys below).
+    colorPalette: [
+      '#4C9BFF',
+      '#7C6CFF',
+      '#38C6D9',
+      '#E2B144',
+      '#E57AA8',
+      '#8BDB9A',
+      '#F28C5B',
+      '#A3B3CF',
+    ],
+    iconChoices: [
+      'school',
+      'hammer-wrench',
+      'book-open-variant',
+      'run',
+      'code-tags',
+      'music',
+      'palette',
+      'heart-pulse',
+    ],
     // HYPOTHÈSE PRODUIT — modifiable : catégories proposées à l'onboarding (la clé d'icône est MaterialCommunityIcons).
     seed: [
       { name: 'Studies', icon: 'school' },
