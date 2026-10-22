@@ -1,12 +1,12 @@
 import { Tabs } from 'expo-router';
 
 import { en } from '../../i18n/en';
-import { TabBar } from '../../ui/components/TabBar';
 
+/** The bar itself is drawn once in the root layout, so pushed screens keep it too. */
 export default function TabsLayout() {
   return (
     <Tabs
-      tabBar={(props) => <TabBar {...props} />}
+      tabBar={() => null}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: 'transparent' } }}
     >
       <Tabs.Screen name="index" options={{ title: en.tabs.home }} />

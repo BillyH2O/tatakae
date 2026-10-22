@@ -157,7 +157,7 @@ export default function SessionSummaryScreen() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md, padding: space.lg },
   muted: { ...type.body, color: colors.textMuted },
-  content: { padding: space.lg, gap: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm, gap: space.lg },
   title: { ...type.title, color: colors.text },
   panel: { gap: space.md },
   stat: { gap: space.xs },

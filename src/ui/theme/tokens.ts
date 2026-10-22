@@ -17,6 +17,8 @@ export const colors = {
   /** Bars of a chart: one blue, a brighter one for today. */
   bar: '#2F8CFF',
   barBright: '#4CC4FF',
+  /** Empty part of a progress bar. */
+  track: 'rgba(14,32,70,0.95)',
   action: '#2F7BFF',
   actionBright: '#4C9BFF',
   actionPressed: '#1F5FD6',
@@ -36,6 +38,11 @@ export const panelAlpha = { home: 0.84, profile: 0.84, quests: 0.88, solid: 0.9 
 
 /** Soft blue halo around cards, as on the mockups. */
 export const glow = '0 0 14px rgba(60,140,255,0.28)';
+/** Stronger halo of a selected element (today, active segment, primary button). */
+export const glowStrong = '0 0 12px rgba(76,170,255,0.45)';
+
+/** Fill of bars and primary buttons, left/top to right/bottom. */
+export const gradient = { bar: ['#2F7BFF', '#4CB6FF'], button: ['#3A8DFF', '#1F62E0'] } as const;
 
 export function panel(alpha: number): string {
   return `rgba(10,18,36,${alpha})`;
@@ -62,7 +69,7 @@ export const touch = { min: 44 } as const;
 export const headerMaxFontScale = 1.3;
 
 export const type = {
-  title: { fontSize: 24, lineHeight: 30, fontWeight: '700' },
+  title: { fontSize: 28, lineHeight: 34, fontWeight: '700' },
   h2: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
   body: { fontSize: 15, lineHeight: 20, fontWeight: '400' },
   label: { fontSize: 13, lineHeight: 17, fontWeight: '500' },

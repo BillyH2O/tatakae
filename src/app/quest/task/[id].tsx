@@ -64,7 +64,7 @@ export default function TaskDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm },
   panel: { gap: space.md },
   heading: { ...type.h2, color: colors.text },
   input: {

@@ -165,7 +165,7 @@ function CategoryNameEditor({ categoryId, initialName }: { categoryId: string; i
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   muted: { ...type.body, color: colors.textMuted },
-  content: { padding: space.lg, paddingBottom: space.xl * 2 },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm, paddingBottom: space.xl * 2 },
   panel: { gap: space.md },
   title: { ...type.title, color: colors.text },
   note: { ...type.caption, color: colors.textFaint },

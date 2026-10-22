@@ -19,8 +19,9 @@ import { Avatar } from '../../ui/components/Avatar';
 import { Button } from '../../ui/components/Button';
 import { Panel } from '../../ui/components/Panel';
 import { ProgressBar } from '../../ui/components/ProgressBar';
+import { StatTile } from '../../ui/components/StatTile';
 import { TabScene } from '../../ui/components/TabScene';
-import { colors, panelAlpha, space, type } from '../../ui/theme/tokens';
+import { colors, panelAlpha, radius, space, type } from '../../ui/theme/tokens';
 
 const loadProfileBundle = async (db: SqlDb) => ({
   profile: await getProfile(db),
@@ -122,26 +123,17 @@ export default function ProfileScreen() {
             <StatTile label={en.profile.activeDays} value={String(stats.activeDays)} />
           </View>
 
-          <Button label={en.profile.settings} onPress={() => router.push('/settings' as Href)} />
+          <Button label={en.profile.settings} icon="cog-outline" onPress={() => router.push('/settings' as Href)} />
         </Panel>
       </ScrollView>
     </TabScene>
   );
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.statTile}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   muted: { ...type.body, color: colors.textMuted },
-  content: { padding: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm },
   panel: { gap: space.md },
   hero: { flexDirection: 'row', alignItems: 'center', gap: space.lg },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' },
@@ -152,7 +144,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 6,
+    borderRadius: radius.md,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
     minHeight: 44,
@@ -163,14 +155,4 @@ const styles = StyleSheet.create({
   crystalValue: { ...type.h2, color: colors.text, fontVariant: ['tabular-nums'] },
   section: { ...type.h2, color: colors.text, marginTop: space.sm },
   statsRow: { flexDirection: 'row', gap: space.sm },
-  statTile: {
-    flex: 1,
-    padding: space.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 6,
-    gap: space.xs,
-  },
-  statValue: { ...type.label, color: colors.text, fontVariant: ['tabular-nums'] },
-  statLabel: { ...type.caption, color: colors.textFaint },
 });

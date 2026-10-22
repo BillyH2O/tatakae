@@ -134,7 +134,11 @@ lueur douce (`Panel`, `colors.border`, `glow`), des cellules internes discrètes
 et une barre d'onglets en cartes flottantes. Un seul bleu pour les barres et les remplissages, du cyan pour les gros
 chiffres ; les couleurs de score (orange / jaune / vert) ne servent qu'aux scores des jours. Tokens dans
 `src/ui/theme/tokens.ts`. Stats : histogramme à barres bleues avec valeurs, axe en heures et score sous chaque jour
-(semaine), heatmap en une teinte bleue (légende « Less … More »). Vérifié sur le web uniquement.
+(semaine), heatmap en une teinte bleue (légende « Less … More »). Accueil : calendrier de semaine compact, radar en
+losange avec les valeurs à côté, quêtes du jour en liste groupée. Quêtes : mission prioritaire en carte, tâches et
+habitudes en listes groupées ; la case ronde s'anime quand on coche (remplissage, onde, titre barré). Focus : carte de
+quête, anneau lumineux, Pause / Terminer côte à côte. La barre d'onglets est affichée sur tous les écrans, y compris
+Focus et les réglages. Vérifié sur le web uniquement (animations et retour haptique non testés sur appareil).
 
 Le fond paysage (`assets/images/landscape.jpg`) est une illustration anime originale générée par IA
 pour ce projet (aucune franchise, aucun personnage, pas de pixel art).

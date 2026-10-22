@@ -25,7 +25,6 @@ export function CategoryPicker({ categories, value, onChange }: Props) {
           key={category.id}
           label={category.archivedAt === null ? category.name : `${category.name} (${en.stats.history.archived})`}
           selected={value === category.id}
-          accent={category.color}
           onPress={() => onChange(category.id)}
         />
       ))}

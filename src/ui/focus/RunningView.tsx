@@ -1,3 +1,4 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -26,7 +27,9 @@ import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Panel } from '../components/Panel';
+import { QuestCard } from '../components/QuestCard';
 import { TimerRing } from '../components/TimerRing';
+import { listCategories } from '../../db/repositories';
 import { colors, panelAlpha, space, type } from '../theme/tokens';
 
 const TICK_MS = 250;
@@ -54,6 +57,9 @@ export function RunningView({ state, showAlreadyRunning }: Props) {
     [session.taskId, session.habitOccurrenceId],
   );
   const quest = useQuery(['quests'], questFetcher).data ?? null;
+  const categories = useQuery(['categories'], listCategories).data;
+  const categoryName =
+    categories?.find((category) => category.id === session.categoryId)?.name ?? en.focus.prepare.uncategorized;
   const keepScreenOn = useQuery(['settings'], getTimerSettings).data?.keepScreenOn ?? false;
 
   useEffect(() => {
@@ -97,16 +103,15 @@ export function RunningView({ state, showAlreadyRunning }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
+      <Text style={styles.title} accessibilityRole="header">
+        {en.focus.title}
+      </Text>
       {showAlreadyRunning ? <Text style={styles.notice}>{en.focus.prepare.alreadyActive}</Text> : null}
 
-      {quest ? (
-        <Panel alpha={panelAlpha.solid} style={styles.questPanel}>
-          <Text style={styles.questLabel}>{en.focus.prepare.quest}</Text>
-          <Text style={styles.questTitle} numberOfLines={2}>
-            {quest.title}
-          </Text>
-        </Panel>
-      ) : null}
+      <QuestCard
+        title={quest ? quest.title : en.focus.freeSession}
+        subtitle={categoryName}
+      />
 
       <View style={styles.ringWrap}>
         <TimerRing progress={view.progress}>
@@ -121,36 +126,49 @@ export function RunningView({ state, showAlreadyRunning }: Props) {
         </TimerRing>
       </View>
 
+      <Panel alpha={panelAlpha.solid} style={styles.blocking}>
+        <MaterialCommunityIcons name="lock-open-variant-outline" size={20} color={colors.textMuted} />
+        <Text style={styles.blockingText}>{en.focus.blockingUnavailable}</Text>
+      </Panel>
+
+      {tooShort ? <Text style={styles.note}>{en.focus.running.tooShort}</Text> : null}
       <View style={styles.actions}>
-        {paused ? (
-          <Button
-            label={en.focus.running.resume}
-            loading={busy}
-            onPress={() => void run(() => resumeSession(db, systemClock, session.id))}
-          />
-        ) : (
-          <Button
-            label={en.focus.running.pause}
-            loading={busy}
-            onPress={() => void run(() => pauseSession(db, systemClock, newId, session.id))}
-          />
-        )}
-        {tooShort ? (
-          <>
-            <Text style={styles.note}>{en.focus.running.tooShort}</Text>
+        <View style={styles.action}>
+          {paused ? (
+            <Button
+              label={en.focus.running.resume}
+              icon="play"
+              variant="ghost"
+              large
+              loading={busy}
+              onPress={() => void run(() => resumeSession(db, systemClock, session.id))}
+            />
+          ) : (
+            <Button
+              label={en.focus.running.pause}
+              icon="pause"
+              variant="ghost"
+              large
+              loading={busy}
+              onPress={() => void run(() => pauseSession(db, systemClock, newId, session.id))}
+            />
+          )}
+        </View>
+        <View style={styles.action}>
+          {tooShort ? (
             <Button
               label={en.focus.running.discard}
+              icon="close"
               variant="ghost"
+              large
               disabled={busy}
               onPress={() => setDiscardOpen(true)}
             />
-          </>
-        ) : (
-          <Button label={en.focus.running.finish} variant="ghost" disabled={busy} onPress={onFinishPress} />
-        )}
+          ) : (
+            <Button label={en.focus.running.finish} icon="stop" large disabled={busy} onPress={onFinishPress} />
+          )}
+        </View>
       </View>
-
-      <Text style={styles.note}>{en.focus.blockingUnavailable}</Text>
 
       <ConfirmDialog
         visible={finishOpen}
@@ -208,15 +226,17 @@ export function RunningView({ state, showAlreadyRunning }: Props) {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg, gap: space.xl, alignItems: 'center' },
-  notice: { ...type.label, color: colors.warning, textAlign: 'center' },
-  questPanel: { alignSelf: 'stretch', gap: space.xs },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm, gap: space.md },
+  title: { ...type.title, color: colors.text },
+  notice: { ...type.label, color: colors.warning },
   questLabel: { ...type.label, color: colors.textMuted },
-  questTitle: { ...type.h2, color: colors.actionBright },
-  ringWrap: { alignItems: 'center', justifyContent: 'center', paddingVertical: space.md },
-  time: { fontSize: 56, lineHeight: 64, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
-  mode: { ...type.label, color: colors.textMuted },
-  actions: { alignSelf: 'stretch', gap: space.md },
+  ringWrap: { alignItems: 'center', justifyContent: 'center', paddingVertical: space.sm },
+  time: { fontSize: 64, lineHeight: 72, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
+  mode: { ...type.body, fontSize: 17, color: colors.textMuted },
+  blocking: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  blockingText: { ...type.label, fontWeight: '400', color: colors.textMuted, flex: 1 },
+  actions: { flexDirection: 'row', gap: space.md },
+  action: { flex: 1 },
   note: { ...type.caption, color: colors.textFaint, textAlign: 'center' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
 });

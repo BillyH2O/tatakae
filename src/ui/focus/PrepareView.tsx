@@ -19,8 +19,9 @@ import { getTimerSettings } from '../../services/settingsService';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { Panel } from '../components/Panel';
+import { QuestCard } from '../components/QuestCard';
 import { SegmentedControl } from '../components/SegmentedControl';
-import { colors, panelAlpha, space, touch, type } from '../theme/tokens';
+import { border, colors, panelAlpha, space, touch, type } from '../theme/tokens';
 
 interface Props {
   taskId?: string;
@@ -86,27 +87,24 @@ export function PrepareView({ taskId, occurrenceId }: Props) {
         {en.focus.title}
       </Text>
 
-      <Panel alpha={panelAlpha.solid} style={styles.panel}>
-        <Text style={styles.label}>{en.focus.prepare.quest}</Text>
-        {activeQuest ? (
-          <View style={styles.questRow}>
-            <Text style={styles.questTitle} numberOfLines={2}>
-              {activeQuest.title}
-            </Text>
+      <QuestCard
+        title={activeQuest ? activeQuest.title : en.focus.freeSession}
+        subtitle={categories.find((category) => category.id === categoryId)?.name ?? en.focus.prepare.uncategorized}
+        right={
+          activeQuest ? (
             <Pressable
               onPress={() => setQuestDismissed(true)}
-              hitSlop={8}
-              style={styles.iconBtn}
+              hitSlop={12}
               accessibilityRole="button"
               accessibilityLabel={en.focus.prepare.clearQuest}
             >
-              <MaterialCommunityIcons name="close" size={20} color={colors.textMuted} />
+              <MaterialCommunityIcons name="close" size={22} color={colors.textMuted} />
             </Pressable>
-          </View>
-        ) : (
-          <Text style={styles.muted}>{en.focus.freeSession}</Text>
-        )}
+          ) : undefined
+        }
+      />
 
+      <Panel alpha={panelAlpha.solid} style={styles.panel}>
         <Text style={styles.label}>{en.focus.prepare.category}</Text>
         <View style={styles.chips}>
           <Chip
@@ -118,7 +116,6 @@ export function PrepareView({ taskId, occurrenceId }: Props) {
             <Chip
               key={category.id}
               label={category.name}
-              accent={category.color}
               selected={categoryId === category.id}
               onPress={() => setCategoryChoice(category.id)}
             />
@@ -171,25 +168,22 @@ export function PrepareView({ taskId, occurrenceId }: Props) {
         )}
 
         <View style={styles.blocking} accessible accessibilityLabel={en.focus.blockingUnavailable}>
-          <MaterialCommunityIcons name="shield-off-outline" size={18} color={colors.textFaint} />
+          <MaterialCommunityIcons name="lock-open-variant-outline" size={18} color={colors.textMuted} />
           <Text style={styles.note}>{en.focus.blockingUnavailable}</Text>
         </View>
-
-        <Button label={en.focus.prepare.start} onPress={() => void start()} loading={busy} />
       </Panel>
+
+      <Button label={en.focus.prepare.start} icon="play" large onPress={() => void start()} loading={busy} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg, gap: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm, gap: space.md },
   title: { ...type.title, color: colors.text },
   panel: { gap: space.md },
-  label: { ...type.label, color: colors.textMuted },
+  label: { ...type.h2, fontWeight: '700', color: colors.text },
   muted: { ...type.body, color: colors.textMuted },
-  questRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  questTitle: { ...type.h2, color: colors.actionBright, flex: 1 },
-  iconBtn: { padding: space.xs },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.lg },
   stepBtn: {
@@ -197,9 +191,13 @@ const styles = StyleSheet.create({
     height: touch.min,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: touch.min / 2,
+    borderWidth: border.thin,
+    borderColor: colors.border,
+    backgroundColor: colors.cell,
   },
   disabled: { opacity: 0.35 },
-  minutes: { ...type.title, color: colors.text, minWidth: 110, textAlign: 'center' },
-  blocking: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  note: { ...type.caption, color: colors.textFaint, flex: 1 },
+  minutes: { fontSize: 34, lineHeight: 40, fontWeight: '700', color: colors.cyan, minWidth: 130, textAlign: 'center' },
+  blocking: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingTop: space.xs },
+  note: { ...type.label, fontWeight: '400', color: colors.textMuted, flex: 1 },
 });

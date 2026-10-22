@@ -185,7 +185,7 @@ export default function NewSessionScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { padding: space.lg, gap: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm, gap: space.lg },
   panel: { gap: space.md },
   title: { ...type.title, color: colors.text },
   label: { ...type.label, color: colors.textMuted },

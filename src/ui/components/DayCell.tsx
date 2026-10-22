@@ -1,12 +1,12 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { scoreBucket, scoreDisplay, type DayCellState } from '../../domain/scores';
 import { en, formatDayLong } from '../../i18n/en';
-import { border, colors, radius, space, touch, type } from '../theme/tokens';
+import { border, colors, glowStrong, radius, type } from '../theme/tokens';
 
 interface Props {
   date: string;
-  /** Short weekday ("Mon"). */
+  /** One-letter weekday ("M"). */
   weekday: string;
   state: DayCellState;
   selected: boolean;
@@ -39,20 +39,19 @@ function mainText(state: DayCellState): string {
     case 'rest':
       return en.home.calendar.rest;
     case 'noGoal':
-      return en.home.calendar.noGoal;
     case 'future':
-      return '';
+      return en.home.calendar.noGoal;
   }
 }
 
-function accentColor(state: DayCellState): string {
-  if (state.kind === 'today' || state.kind === 'past') return colors.score[scoreBucket(state.score)];
-  return colors.score.neutral;
+function scoreColor(state: DayCellState, highlighted: boolean): string {
+  if (state.kind === 'today' || state.kind === 'past') {
+    return highlighted ? colors.cyan : colors.score[scoreBucket(state.score)];
+  }
+  return colors.textMuted;
 }
 
 export function DayCell({ date, weekday, state, selected, isToday, onPress }: Props) {
-  const accent = accentColor(state);
-  const hasScore = state.kind === 'today' || state.kind === 'past';
   const label = `${formatDayLong(date)}, ${dayCellStateText(state)}${selected ? `, ${en.home.calendar.selected}` : ''}`;
 
   return (
@@ -63,23 +62,18 @@ export function DayCell({ date, weekday, state, selected, isToday, onPress }: Pr
       accessibilityLabel={label}
       accessibilityState={{ selected }}
     >
-      <Text style={styles.weekday} maxFontSizeMultiplier={1.3}>
+      <Text style={[styles.weekday, selected && styles.textSelected]} maxFontSizeMultiplier={1.3}>
         {weekday}
       </Text>
-      <Text style={[styles.date, isToday && styles.dateToday]} maxFontSizeMultiplier={1.3}>
+      <Text style={[styles.date, (selected || isToday) && styles.textSelected]} maxFontSizeMultiplier={1.3}>
         {Number(date.slice(-2))}
       </Text>
-      <View style={[styles.marker, isToday && styles.markerToday]} />
       <Text
-        style={[styles.main, { color: hasScore ? accent : colors.textMuted }]}
+        style={[styles.main, state.kind === 'rest' && styles.rest, { color: scoreColor(state, selected) }]}
         numberOfLines={1}
         maxFontSizeMultiplier={1.3}
       >
         {mainText(state)}
-      </Text>
-      <View style={[styles.accent, { backgroundColor: hasScore || state.kind !== 'future' ? accent : 'transparent' }]} />
-      <Text style={styles.live} numberOfLines={1} maxFontSizeMultiplier={1.2}>
-        {state.kind === 'today' ? en.home.calendar.inProgressShort : ' '}
       </Text>
     </Pressable>
   );
@@ -88,22 +82,22 @@ export function DayCell({ date, weekday, state, selected, isToday, onPress }: Pr
 const styles = StyleSheet.create({
   cell: {
     flex: 1,
-    minWidth: touch.min - space.sm,
-    minHeight: 92,
+    minWidth: 0,
     alignItems: 'center',
-    paddingVertical: space.xs,
+    paddingVertical: 6,
     borderWidth: border.thin,
-    borderColor: 'transparent',
+    borderColor: colors.cellBorder,
+    backgroundColor: colors.cell,
     borderRadius: radius.md,
-    gap: 2,
   },
-  selected: { borderColor: colors.borderStrong, backgroundColor: colors.actionMuted },
+  selected: {
+    borderColor: colors.borderStrong,
+    backgroundColor: 'rgba(47,123,255,0.22)',
+    boxShadow: glowStrong,
+  },
   weekday: { ...type.caption, color: colors.textMuted },
   date: { ...type.body, color: colors.text, fontVariant: ['tabular-nums'] },
-  dateToday: { color: colors.actionBright, fontWeight: '700' },
-  marker: { width: 4, height: 4, borderRadius: 2, backgroundColor: 'transparent' },
-  markerToday: { backgroundColor: colors.actionBright },
-  main: { ...type.label, fontVariant: ['tabular-nums'], minHeight: 17 },
-  accent: { width: 20, height: 3, borderRadius: 2 },
-  live: { fontSize: 10, lineHeight: 12, color: colors.textFaint },
+  textSelected: { color: colors.text, fontWeight: '700' },
+  main: { ...type.body, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  rest: { ...type.caption, lineHeight: 20, fontWeight: '500' },
 });

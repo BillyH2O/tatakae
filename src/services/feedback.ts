@@ -7,3 +7,8 @@ import * as Haptics from 'expo-haptics';
 export function playSessionEndHaptic(): void {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
 }
+
+/** Light tick when a quest is checked. Same best-effort rules as above. */
+export function playCheckHaptic(): void {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+}

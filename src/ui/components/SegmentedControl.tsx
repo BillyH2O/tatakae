@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { border, colors, glow, radius, space, touch, type } from '../theme/tokens';
+import { border, colors, glowStrong, radius, touch, type } from '../theme/tokens';
 
 interface Option<T extends string> {
   value: T;
@@ -14,6 +14,7 @@ interface Props<T extends string> {
   accessibilityLabel?: string;
 }
 
+/** One outlined track; the selected segment is a raised, glowing pill inside it. */
 export function SegmentedControl<T extends string>({
   options,
   value,
@@ -21,7 +22,7 @@ export function SegmentedControl<T extends string>({
   accessibilityLabel,
 }: Props<T>) {
   return (
-    <View style={styles.row} accessibilityRole="tablist" accessibilityLabel={accessibilityLabel}>
+    <View style={styles.track} accessibilityRole="tablist" accessibilityLabel={accessibilityLabel}>
       {options.map((option) => {
         const selected = option.value === value;
         return (
@@ -44,24 +45,29 @@ export function SegmentedControl<T extends string>({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: space.xs },
+  track: {
+    flexDirection: 'row',
+    borderWidth: border.thin,
+    borderColor: colors.cellBorder,
+    backgroundColor: 'rgba(10,18,36,0.6)',
+    borderRadius: radius.md,
+  },
   segment: {
     flex: 1,
-    paddingVertical: space.sm,
-    paddingHorizontal: space.sm,
+    paddingHorizontal: 6,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: touch.min,
     borderWidth: border.thin,
-    borderColor: colors.cellBorder,
-    backgroundColor: colors.cell,
+    borderColor: 'transparent',
     borderRadius: radius.md,
+    margin: -border.thin,
   },
   segmentSelected: {
-    backgroundColor: colors.actionMuted,
+    backgroundColor: 'rgba(47,123,255,0.28)',
     borderColor: colors.borderStrong,
-    boxShadow: glow,
+    boxShadow: glowStrong,
   },
-  label: { ...type.label, color: colors.textMuted },
-  labelSelected: { color: colors.text, fontWeight: '700' },
+  label: { ...type.body, color: colors.textMuted },
+  labelSelected: { color: colors.text, fontWeight: '600' },
 });

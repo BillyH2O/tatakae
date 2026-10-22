@@ -123,7 +123,7 @@ export default function SettingsNotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm },
   panel: { gap: space.sm },
   title: { ...type.title, color: colors.text, marginBottom: space.sm },
   label: { ...type.label, color: colors.textMuted },

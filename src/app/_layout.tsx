@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { DbProvider } from '../db/DbProvider';
 import { AppHeader } from '../ui/components/AppHeader';
 import { ScreenBackground } from '../ui/components/ScreenBackground';
+import { TabBar } from '../ui/components/TabBar';
 import { ProfileGate } from '../ui/providers/ProfileGate';
 import { SessionRuntime } from '../ui/providers/SessionRuntime';
 import { configureNotifications, setupNotifications } from '../services/notificationService';
@@ -34,6 +35,7 @@ function AppShell() {
       <View style={styles.body}>
         <Stack screenOptions={{ headerShown: false, contentStyle: styles.transparent }} />
       </View>
+      {showHeader ? <TabBar /> : null}
       <SessionRuntime />
     </>
   );

@@ -8,11 +8,11 @@ import { useDatabaseMode } from '../../hooks/useDatabaseMode';
 import { useHeaderData } from '../../hooks/useHeaderData';
 import { useToday } from '../../hooks/useToday';
 import { en, formatDuration } from '../../i18n/en';
-import { border, colors, glow, headerMaxFontScale, panel, radius, space, touch, type } from '../theme/tokens';
+import { border, colors, glow, headerMaxFontScale, panel, radius, space, type } from '../theme/tokens';
 import { Avatar } from './Avatar';
 import { ProgressBar } from './ProgressBar';
 
-const AVATAR_SIZE = 40;
+const AVATAR_SIZE = 52;
 const HEADER_ALPHA = 0.86;
 
 function focusLabel({ focusSec, goalMin }: FocusVsGoal): string {
@@ -21,7 +21,6 @@ function focusLabel({ focusSec, goalMin }: FocusVsGoal): string {
 }
 
 function TotalColumn({ label, value, onPress }: { label: string; value: FocusVsGoal | undefined; onPress: () => void }) {
-  const text = value ? focusLabel(value) : '…';
   const progress = value ? goalProgress(value) : null;
   return (
     <Pressable
@@ -29,17 +28,20 @@ function TotalColumn({ label, value, onPress }: { label: string; value: FocusVsG
       style={styles.total}
       hitSlop={{ top: space.sm, bottom: space.sm }}
       accessibilityRole="button"
-      accessibilityLabel={en.header.openStatsA11y(label, text)}
+      accessibilityLabel={en.header.openStatsA11y(label, value ? focusLabel(value) : '…')}
     >
       <View style={styles.totalLine}>
         <Text style={styles.totalLabel} maxFontSizeMultiplier={headerMaxFontScale}>
           {label}
         </Text>
         <Text style={styles.totalValue} numberOfLines={1} maxFontSizeMultiplier={headerMaxFontScale}>
-          {text}
+          {value ? formatDuration(value.focusSec) : '…'}
+          {value && value.goalMin !== null ? (
+            <Text style={styles.totalGoal}>{` / ${formatDuration(value.goalMin * 60)}`}</Text>
+          ) : null}
         </Text>
       </View>
-      {progress === null ? null : <ProgressBar progress={progress} />}
+      <ProgressBar progress={progress ?? 0} height={6} />
     </Pressable>
   );
 }
@@ -61,86 +63,101 @@ export function AppHeader() {
 
   return (
     <View style={[styles.root, { marginTop: insets.top + space.sm }]}>
-      <View style={styles.identity}>
-        <Pressable
-          onPress={() => router.push('/profile')}
-          accessibilityRole="button"
-          accessibilityLabel={en.header.openProfile}
-          hitSlop={(touch.min - AVATAR_SIZE) / 2}
-        >
-          <Avatar uri={data?.avatarUri ?? null} size={AVATAR_SIZE} />
-        </Pressable>
-        <Text style={styles.name} numberOfLines={1} maxFontSizeMultiplier={headerMaxFontScale}>
-          {data?.displayName ?? en.header.defaultName}
-        </Text>
-        <Text
-          style={styles.level}
-          maxFontSizeMultiplier={headerMaxFontScale}
-          accessibilityLabel={level === undefined ? undefined : en.header.levelA11y(level)}
-        >
-          {level === undefined ? '…' : en.header.level(level)}
-        </Text>
-        <View
-          style={styles.crystals}
-          accessible
-          accessibilityLabel={crystals === undefined ? undefined : en.header.crystalsA11y(crystals)}
-        >
-          <MaterialCommunityIcons name="diamond-stone" size={16} color={colors.crystal} />
-          <Text style={styles.crystalValue} maxFontSizeMultiplier={headerMaxFontScale}>
-            {crystals ?? '…'}
+      <Pressable
+        onPress={() => router.push('/profile')}
+        style={styles.avatar}
+        accessibilityRole="button"
+        accessibilityLabel={en.header.openProfile}
+      >
+        <Avatar uri={data?.avatarUri ?? null} size={AVATAR_SIZE - 2} />
+      </Pressable>
+      <View style={styles.main}>
+        <View style={styles.identity}>
+          <Text style={styles.name} numberOfLines={1} maxFontSizeMultiplier={headerMaxFontScale}>
+            {(data?.displayName ?? en.header.defaultName).toUpperCase()}
           </Text>
+          <Text
+            style={styles.level}
+            maxFontSizeMultiplier={headerMaxFontScale}
+            accessibilityLabel={level === undefined ? undefined : en.header.levelA11y(level)}
+          >
+            {level === undefined ? '' : `·  ${en.header.level(level)}`}
+          </Text>
+          <View style={styles.spacer} />
+          {isDemo ? (
+            <Pressable
+              onPress={() => router.push('/settings/data')}
+              style={styles.demo}
+              accessibilityRole="button"
+              accessibilityLabel={en.demo.bannerA11y}
+            >
+              <Text style={styles.demoText} maxFontSizeMultiplier={headerMaxFontScale}>
+                {en.demo.banner}
+              </Text>
+            </Pressable>
+          ) : null}
+          <View
+            style={styles.crystals}
+            accessible
+            accessibilityLabel={crystals === undefined ? undefined : en.header.crystalsA11y(crystals)}
+          >
+            <MaterialCommunityIcons name="diamond-stone" size={18} color={colors.crystal} />
+            <Text style={styles.crystalValue} maxFontSizeMultiplier={headerMaxFontScale}>
+              {crystals ?? '…'}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.totals}>
+          <TotalColumn label={en.header.today} value={data?.totals.today} onPress={openStats} />
+          <TotalColumn label={en.header.week} value={data?.totals.week} onPress={openStats} />
         </View>
       </View>
-      <View style={styles.totals}>
-        <TotalColumn label={en.header.today} value={data?.totals.today} onPress={openStats} />
-        <View style={styles.divider} />
-        <TotalColumn label={en.header.week} value={data?.totals.week} onPress={openStats} />
-      </View>
-      {isDemo ? (
-        <Pressable
-          onPress={() => router.push('/settings/data')}
-          style={styles.demo}
-          accessibilityRole="button"
-          accessibilityLabel={en.demo.bannerA11y}
-        >
-          <Text style={styles.demoText} maxFontSizeMultiplier={headerMaxFontScale}>
-            {en.demo.banner}
-          </Text>
-        </Pressable>
-      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
     marginHorizontal: space.md,
     marginBottom: space.sm,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm,
-    gap: space.sm,
+    padding: space.sm + 2,
     backgroundColor: panel(HEADER_ALPHA),
     borderWidth: border.thin,
     borderColor: colors.border,
     borderRadius: radius.lg,
     boxShadow: glow,
   },
-  identity: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  name: { ...type.h2, color: colors.text, flex: 1, minWidth: 0 },
-  level: { ...type.label, color: colors.textMuted, fontVariant: ['tabular-nums'] },
-  crystals: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
-  crystalValue: { ...type.label, color: colors.text, fontVariant: ['tabular-nums'] },
-  totals: { flexDirection: 'row', alignItems: 'stretch', gap: space.md },
-  total: { flex: 1, justifyContent: 'center', gap: space.xs, minHeight: 28 },
-  totalLine: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: space.sm },
-  totalLabel: { ...type.caption, color: colors.textMuted },
-  totalValue: { ...type.label, color: colors.text, fontVariant: ['tabular-nums'], flexShrink: 1 },
-  divider: { width: border.hairline, backgroundColor: colors.divider },
-  demo: {
-    alignSelf: 'flex-start',
-    minHeight: 24,
+  avatar: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: radius.md,
+    borderWidth: border.thin,
+    borderColor: colors.borderStrong,
+    overflow: 'hidden',
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: space.sm,
+    backgroundColor: colors.nightRaised,
+  },
+  main: { flex: 1, minWidth: 0, gap: 6 },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  name: { ...type.body, fontWeight: '700', letterSpacing: 0.5, color: colors.text, flexShrink: 1 },
+  level: { ...type.body, color: colors.textMuted, fontVariant: ['tabular-nums'] },
+  spacer: { flex: 1 },
+  crystals: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  crystalValue: { ...type.body, fontWeight: '600', color: colors.text, fontVariant: ['tabular-nums'] },
+  totals: { flexDirection: 'row', gap: space.lg },
+  total: { flex: 1, minWidth: 0, gap: 5 },
+  totalLine: { flexDirection: 'row', alignItems: 'baseline', gap: space.sm },
+  totalLabel: { ...type.caption, color: colors.textMuted },
+  totalValue: { ...type.label, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'], flexShrink: 1 },
+  totalGoal: { ...type.caption, fontWeight: '400', color: colors.textMuted },
+  demo: {
+    minHeight: 22,
+    justifyContent: 'center',
+    paddingHorizontal: 6,
     borderRadius: radius.sm,
     borderWidth: border.hairline,
     borderColor: colors.warning,

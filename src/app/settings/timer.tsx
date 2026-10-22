@@ -62,30 +62,26 @@ export default function SettingsTimerScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Panel alpha={panelAlpha.profile} style={styles.panel}>
-        <Text style={styles.title}>{en.settings.timerTitle}</Text>
+        <Text style={styles.title} accessibilityRole="header">
+          {en.settings.timerTitle}
+        </Text>
 
-        <Text style={styles.label}>{en.settings.defaultFocus}</Text>
-        <SegmentedControl
-          options={focusOptions}
-          value={focusValue}
-          onChange={setFocus}
-        />
+        <View style={styles.section}>
+          <Text style={styles.label}>{en.settings.defaultFocus}</Text>
+          <SegmentedControl options={focusOptions} value={focusValue} onChange={setFocus} />
+        </View>
 
-        <Text style={styles.label}>{en.settings.defaultBreak}</Text>
-        <SegmentedControl
-          options={breakOptions}
-          value={breakValue}
-          onChange={setBreak}
-        />
+        <View style={styles.section}>
+          <Text style={styles.label}>{en.settings.defaultBreak}</Text>
+          <SegmentedControl options={breakOptions} value={breakValue} onChange={setBreak} />
+        </View>
 
-        <Text style={styles.label}>{en.settings.keepScreenOn}</Text>
-        <SegmentedControl
-          options={keepOptions}
-          value={keepValue}
-          onChange={setKeepOn}
-        />
+        <View style={styles.section}>
+          <Text style={styles.label}>{en.settings.keepScreenOn}</Text>
+          <SegmentedControl options={keepOptions} value={keepValue} onChange={setKeepOn} />
+        </View>
 
-        <Button label={en.settings.save} onPress={() => void save()} loading={busy} />
+        <Button label={en.settings.save} icon="check" large onPress={() => void save()} loading={busy} />
       </Panel>
     </ScrollView>
   );
@@ -94,8 +90,9 @@ export default function SettingsTimerScreen() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   muted: { ...type.body, color: colors.textMuted },
-  content: { padding: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm },
   panel: { gap: space.lg },
   title: { ...type.title, color: colors.text },
-  label: { ...type.label, color: colors.textMuted },
+  section: { gap: space.sm },
+  label: { ...type.h2, fontWeight: '700', color: colors.text },
 });

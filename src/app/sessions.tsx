@@ -48,7 +48,7 @@ export default function SessionHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg, gap: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm, gap: space.lg },
   panel: { gap: space.sm },
   title: { ...type.title, color: colors.text, marginBottom: space.xs },
   caption: { ...type.caption, color: colors.textMuted },

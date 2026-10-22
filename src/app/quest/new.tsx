@@ -130,7 +130,7 @@ export default function NewQuestScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { padding: space.lg, gap: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm, gap: space.lg },
   panel: { gap: space.md },
   label: { ...type.label, color: colors.textMuted },
   input: {

@@ -32,7 +32,7 @@ export function PlaceholderScreen({ title, body, alpha = panelAlpha.home, childr
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm },
   panel: { gap: space.sm },
   title: { ...type.title, color: colors.text },
   body: { ...type.body, color: colors.textMuted },

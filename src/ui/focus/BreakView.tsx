@@ -57,8 +57,8 @@ export function BreakView({ breakState }: { breakState: ActiveBreak }) {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg, gap: space.xl, alignItems: 'center' },
-  title: { ...type.title, color: colors.text },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm, gap: space.xl, alignItems: 'center' },
+  title: { ...type.title, color: colors.text, alignSelf: 'flex-start' },
   time: { fontSize: 56, lineHeight: 64, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
   sub: { ...type.label, color: colors.textMuted },
   panel: { alignSelf: 'stretch' },

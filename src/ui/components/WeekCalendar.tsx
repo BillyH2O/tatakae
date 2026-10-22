@@ -5,7 +5,7 @@ import type { LocalDate } from '../../domain/types';
 import { addDays } from '../../domain/time/localDate';
 import type { DayCellData } from '../../hooks/useHome';
 import { en, formatWeekRange } from '../../i18n/en';
-import { colors, space, touch, type } from '../theme/tokens';
+import { colors, space, type } from '../theme/tokens';
 import { DayCell } from './DayCell';
 
 interface Props {
@@ -20,7 +20,9 @@ interface Props {
   onGoToToday: () => void;
 }
 
-/** Monday → Sunday strip: week navigation, one cell per day with its score or state. */
+const ARROW_SLOP = { top: 10, bottom: 10, left: 12, right: 12 };
+
+/** Monday → Sunday strip: week navigation, one compact cell per day with its score or state. */
 export function WeekCalendar({ weekFrom, today, selected, cells, onSelect, onShiftWeek, onGoToToday }: Props) {
   const range = formatWeekRange(weekFrom, addDays(weekFrom, 6));
   const isCurrentWeek = today >= weekFrom && today <= addDays(weekFrom, 6);
@@ -30,29 +32,32 @@ export function WeekCalendar({ weekFrom, today, selected, cells, onSelect, onShi
       <View style={styles.header}>
         <Pressable
           onPress={() => onShiftWeek(-1)}
-          style={styles.arrow}
+          hitSlop={ARROW_SLOP}
           accessibilityRole="button"
           accessibilityLabel={en.home.calendar.previousWeek}
         >
-          <MaterialCommunityIcons name="chevron-left" size={26} color={colors.actionBright} />
+          <MaterialCommunityIcons name="chevron-left" size={24} color={colors.text} />
         </Pressable>
-        <View style={styles.titleBox}>
-          <Text style={styles.title} accessibilityRole="header" accessibilityLabel={en.home.calendar.weekA11y(range)}>
-            {range}
-          </Text>
-          {isCurrentWeek ? null : (
-            <Pressable onPress={onGoToToday} hitSlop={8} accessibilityRole="button">
-              <Text style={styles.today}>{en.home.calendar.thisWeek}</Text>
-            </Pressable>
-          )}
-        </View>
+        <Text
+          style={styles.title}
+          accessibilityRole="header"
+          accessibilityLabel={en.home.calendar.weekA11y(range)}
+          numberOfLines={1}
+        >
+          {range}
+        </Text>
+        {isCurrentWeek ? null : (
+          <Pressable onPress={onGoToToday} hitSlop={ARROW_SLOP} accessibilityRole="button">
+            <Text style={styles.today}>{en.home.calendar.thisWeek}</Text>
+          </Pressable>
+        )}
         <Pressable
           onPress={() => onShiftWeek(1)}
-          style={styles.arrow}
+          hitSlop={ARROW_SLOP}
           accessibilityRole="button"
           accessibilityLabel={en.home.calendar.nextWeek}
         >
-          <MaterialCommunityIcons name="chevron-right" size={26} color={colors.actionBright} />
+          <MaterialCommunityIcons name="chevron-right" size={24} color={colors.text} />
         </Pressable>
       </View>
       <View style={styles.row}>
@@ -60,7 +65,7 @@ export function WeekCalendar({ weekFrom, today, selected, cells, onSelect, onShi
           <DayCell
             key={cell.date}
             date={cell.date}
-            weekday={en.weekdays.short[index] ?? ''}
+            weekday={(en.weekdays.short[index] ?? '').slice(0, 1)}
             state={cell.state}
             selected={cell.date === selected}
             isToday={cell.date === today}
@@ -78,10 +83,8 @@ function placeholderCells(weekFrom: LocalDate): DayCellData[] {
 
 const styles = StyleSheet.create({
   root: { gap: space.sm },
-  header: { flexDirection: 'row', alignItems: 'center' },
-  arrow: { width: touch.min, height: touch.min, alignItems: 'center', justifyContent: 'center' },
-  titleBox: { flex: 1, alignItems: 'center' },
-  title: { ...type.h2, color: colors.text, textAlign: 'center' },
-  today: { ...type.caption, color: colors.actionBright, paddingVertical: 2 },
-  row: { flexDirection: 'row', gap: 2 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 28 },
+  title: { ...type.h2, color: colors.text, textAlign: 'center', flex: 1 },
+  today: { ...type.caption, color: colors.actionBright },
+  row: { flexDirection: 'row', gap: 5 },
 });

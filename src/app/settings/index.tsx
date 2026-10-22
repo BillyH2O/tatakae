@@ -1,16 +1,18 @@
 import { type Href, useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 
 import { en } from '../../i18n/en';
+import type { IconName } from '../../ui/components/Button';
+import { ListGroup, ListRow } from '../../ui/components/ListRow';
 import { Panel } from '../../ui/components/Panel';
 import { colors, panelAlpha, space, type } from '../../ui/theme/tokens';
 
-const LINKS = [
-  { href: '/settings/goals', label: en.settings.goals },
-  { href: '/settings/categories', label: en.settings.categories },
-  { href: '/settings/timer', label: en.settings.timer },
-  { href: '/settings/notifications', label: en.settings.notifications },
-  { href: '/settings/data', label: en.settings.data },
+const LINKS: readonly { href: string; label: string; icon: IconName }[] = [
+  { href: '/settings/goals', label: en.settings.goals, icon: 'target' },
+  { href: '/settings/categories', label: en.settings.categories, icon: 'shape-outline' },
+  { href: '/settings/timer', label: en.settings.timer, icon: 'timer-outline' },
+  { href: '/settings/notifications', label: en.settings.notifications, icon: 'bell-outline' },
+  { href: '/settings/data', label: en.settings.data, icon: 'database-outline' },
 ];
 
 export default function SettingsIndexScreen() {
@@ -22,30 +24,24 @@ export default function SettingsIndexScreen() {
         <Text style={styles.title} accessibilityRole="header">
           {en.settings.title}
         </Text>
-        {LINKS.map((link) => (
-          <Pressable
-            key={link.href}
-            onPress={() => router.push(link.href as Href)}
-            style={styles.link}
-            accessibilityRole="button"
-          >
-            <Text style={styles.linkText}>{link.label}</Text>
-          </Pressable>
-        ))}
+        <ListGroup>
+          {LINKS.map((link, index) => (
+            <ListRow
+              key={link.href}
+              label={link.label}
+              icon={link.icon}
+              separated={index > 0}
+              onPress={() => router.push(link.href as Href)}
+            />
+          ))}
+        </ListGroup>
       </Panel>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg },
-  panel: { gap: space.sm },
-  title: { ...type.title, color: colors.text, marginBottom: space.sm },
-  link: {
-    minHeight: 48,
-    justifyContent: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-  },
-  linkText: { ...type.body, color: colors.actionBright },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm },
+  panel: { gap: space.lg },
+  title: { ...type.title, color: colors.text },
 });

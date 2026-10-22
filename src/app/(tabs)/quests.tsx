@@ -1,17 +1,21 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { type Href, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { habitWeekProgress, type HabitSchedule } from '../../domain/habits';
-import { questsForDate, type QuestRow as QuestRowModel } from '../../domain/quests';
-import type { Habit } from '../../domain/types';
-import { weekRange } from '../../domain/totals';
+import { listCategories } from '../../db/repositories';
 import { listOccurrencesBetween } from '../../db/repositories/habits';
 import type { SqlDb } from '../../db/SqlDb';
+import { habitWeekProgress, weekdaysFromMask, type HabitSchedule } from '../../domain/habits';
+import { questsForDate, type QuestRow as QuestRowModel } from '../../domain/quests';
+import { weekRange } from '../../domain/totals';
+import type { Habit } from '../../domain/types';
 import { useDb } from '../../hooks/useDb';
 import { useQuery } from '../../hooks/useQuery';
 import { useToday } from '../../hooks/useToday';
 import { en } from '../../i18n/en';
+import { systemClock } from '../../services/clock';
+import { newId } from '../../services/ids';
 import {
   clearPriorityMissionIfInvalid,
   ensureOccurrenceHorizon,
@@ -20,18 +24,25 @@ import {
   toggleOccurrenceComplete,
   toggleTaskComplete,
 } from '../../services/questService';
-import { systemClock } from '../../services/clock';
-import { newId } from '../../services/ids';
+import { getTimerSettings } from '../../services/settingsService';
 import { Button } from '../../ui/components/Button';
-import { CollapsibleSection } from '../../ui/components/CollapsibleSection';
 import { EmptyState } from '../../ui/components/EmptyState';
 import { Panel } from '../../ui/components/Panel';
-import { QuestRow } from '../../ui/components/QuestRow';
+import { QuestCard } from '../../ui/components/QuestCard';
+import { QuestGroup, QuestRow } from '../../ui/components/QuestRow';
 import { SegmentedControl } from '../../ui/components/SegmentedControl';
 import { TabScene } from '../../ui/components/TabScene';
-import { colors, panelAlpha, space, type } from '../../ui/theme/tokens';
+import { border, colors, panelAlpha, space, type } from '../../ui/theme/tokens';
 
 type QuestTab = 'today' | 'all';
+
+const rowKey = (row: QuestRowModel) => (row.kind === 'task' ? row.task.id : row.occurrence.id);
+
+function habitDays(habit: Habit): string {
+  const days = weekdaysFromMask(habit.weekdaysMask);
+  if (days.length === 7) return en.quests.everyDay;
+  return days.map((day) => en.weekdays.short[day - 1] ?? '').join(' · ');
+}
 
 export default function QuestsScreen() {
   const db = useDb();
@@ -56,19 +67,16 @@ export default function QuestsScreen() {
   );
 
   const { data } = useQuery(['quests', 'profile'], fetchToday);
+  const categories = useQuery(['categories'], listCategories).data;
+  const focusMin = useQuery(['settings'], getTimerSettings).data?.defaultFocusMin;
+
   const view = useMemo(() => {
     if (!data) return null;
     return questsForDate(data.today, data.today, data.tasks, data.habits, data.occurrences, data.mission);
   }, [data]);
 
-  const allOpenTasks = useMemo(
-    () => data?.tasks.filter((task) => task.status === 'open') ?? [],
-    [data],
-  );
-  const activeHabits = useMemo(
-    () => data?.habits.filter((habit) => habit.status === 'active') ?? [],
-    [data],
-  );
+  const allOpenTasks = useMemo(() => data?.tasks.filter((task) => task.status === 'open') ?? [], [data]);
+  const activeHabits = useMemo(() => data?.habits.filter((habit) => habit.status === 'active') ?? [], [data]);
 
   const schedule = (habit: Habit): HabitSchedule => ({
     weekdaysMask: habit.weekdaysMask,
@@ -77,151 +85,202 @@ export default function QuestsScreen() {
     status: habit.status,
   });
 
-  const startRow = (row: QuestRowModel) => {
-    if (row.kind === 'task') {
-      router.push(`/focus?taskId=${encodeURIComponent(row.task.id)}` as Href);
-    } else {
-      router.push(`/focus?occurrenceId=${encodeURIComponent(row.occurrence.id)}` as Href);
-    }
-  };
+  const categoryName = (categoryId: string | null) =>
+    categories?.find((category) => category.id === categoryId)?.name ?? en.focus.prepare.uncategorized;
 
-  const subtitleFor = (row: QuestRowModel) => {
-    if (row.kind !== 'habit' || !data) return undefined;
+  const start = (row: QuestRowModel) =>
+    router.push(
+      (row.kind === 'task'
+        ? `/focus?taskId=${encodeURIComponent(row.task.id)}`
+        : `/focus?occurrenceId=${encodeURIComponent(row.occurrence.id)}`) as Href,
+    );
+  const open = (row: QuestRowModel) =>
+    router.push(
+      row.kind === 'task'
+        ? { pathname: '/quest/task/[id]', params: { id: row.task.id } }
+        : { pathname: '/quest/habit/[id]', params: { id: row.habit.id } },
+    );
+  const toggle = (row: QuestRowModel) =>
+    row.kind === 'task'
+      ? toggleTaskComplete(db, systemClock, row.task.id, today)
+      : toggleOccurrenceComplete(db, systemClock, row.occurrence.id);
+  const makeMission = (row: QuestRowModel) =>
+    void setPriorityMission(
+      db,
+      systemClock,
+      row.kind === 'task' ? { kind: 'task', id: row.task.id } : { kind: 'habit', id: row.habit.id },
+    );
+
+  const info = (row: QuestRowModel): { text?: string; tone?: 'warning' } => {
+    if (row.kind === 'task') return row.overdue ? { text: en.quests.overdue, tone: 'warning' } : {};
+    if (!data) return {};
     const progress = habitWeekProgress(
       schedule(row.habit),
-      data.weekOccurrences.filter((o) => o.habitId === row.habit.id),
+      data.weekOccurrences.filter((occurrence) => occurrence.habitId === row.habit.id),
       today,
     );
-    return en.quests.weekProgress(progress.done, progress.planned);
+    return { text: en.quests.weekProgress(progress.done, progress.planned) };
   };
+
+  const renderRows = (rows: QuestRowModel[]) =>
+    rows.map((row, index) => {
+      const extra = info(row);
+      return (
+        <QuestRow
+          key={rowKey(row)}
+          row={row}
+          info={extra.text}
+          infoTone={extra.tone}
+          separated={index > 0}
+          onToggleComplete={() => toggle(row)}
+          onStart={() => start(row)}
+          onOpen={() => open(row)}
+          onLongPress={() => makeMission(row)}
+        />
+      );
+    });
+
+  const missionKey = view?.mission ? rowKey(view.mission) : null;
+  const todayRows = view ? [...view.active, ...view.completed].filter((row) => rowKey(row) !== missionKey) : [];
+  const todayTasks = todayRows.filter((row) => row.kind === 'task');
+  const todayHabits = todayRows.filter((row) => row.kind === 'habit');
+  const mission = view?.mission ?? null;
 
   return (
     <TabScene>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title} accessibilityRole="header">
-          {en.quests.title}
-        </Text>
-        <SegmentedControl
-          options={[
-            { value: 'today', label: en.quests.today },
-            { value: 'all', label: en.quests.all },
-          ]}
-          value={tab}
-          onChange={setTab}
-        />
+        <Panel alpha={panelAlpha.quests} style={styles.card}>
+          <Text style={styles.title} accessibilityRole="header">
+            {en.quests.title}
+          </Text>
+          <SegmentedControl
+            options={[
+              { value: 'today', label: en.quests.today },
+              { value: 'all', label: en.quests.all },
+            ]}
+            value={tab}
+            onChange={setTab}
+          />
 
-        {tab === 'today' && view ? (
-          <View style={styles.stack}>
-            {view.mission ? (
-              <Panel alpha={panelAlpha.quests}>
-                <Text style={styles.section}>{en.quests.priorityMission}</Text>
-                <QuestRow
-                  row={view.mission}
-                  subtitle={subtitleFor(view.mission)}
-                  onToggleComplete={() =>
-                    view.mission?.kind === 'task'
-                      ? void toggleTaskComplete(db, systemClock, view.mission.task.id, today)
-                      : view.mission?.kind === 'habit'
-                        ? void toggleOccurrenceComplete(db, systemClock, view.mission.occurrence.id)
-                        : undefined
-                  }
-                  onStart={() => startRow(view.mission!)}
-                />
-              </Panel>
-            ) : null}
-
-            {view.active.length === 0 && view.completed.length === 0 ? (
+          {tab === 'today' && view ? (
+            todayRows.length === 0 && !mission ? (
               <EmptyState
                 message={en.quests.emptyToday}
                 actionLabel={en.quests.addQuest}
                 onAction={() => router.push('/quest/new' as Href)}
               />
             ) : (
-              <Panel alpha={panelAlpha.quests} style={styles.stack}>
-                {view.active.map((row) => (
-                  <QuestRow
-                    key={row.kind === 'task' ? row.task.id : row.occurrence.id}
-                    row={row}
-                    subtitle={subtitleFor(row)}
-                    onToggleComplete={() =>
-                      row.kind === 'task'
-                        ? void toggleTaskComplete(db, systemClock, row.task.id, today)
-                        : void toggleOccurrenceComplete(db, systemClock, row.occurrence.id)
-                    }
-                    onStart={() => startRow(row)}
-                    onSetMission={() =>
-                      void setPriorityMission(
-                        db,
-                        systemClock,
-                        row.kind === 'task'
-                          ? { kind: 'task', id: row.task.id }
-                          : { kind: 'habit', id: row.habit.id },
-                      )
-                    }
-                  />
-                ))}
-                <CollapsibleSection title={en.quests.completed} count={view.completed.length}>
-                  {view.completed.map((row) => (
-                    <QuestRow
-                      key={row.kind === 'task' ? row.task.id : row.occurrence.id}
-                      row={row}
-                      onToggleComplete={() =>
-                        row.kind === 'task'
-                          ? void toggleTaskComplete(db, systemClock, row.task.id, today)
-                          : void toggleOccurrenceComplete(db, systemClock, row.occurrence.id)
-                      }
-                      onStart={() => startRow(row)}
-                    />
-                  ))}
-                </CollapsibleSection>
-              </Panel>
-            )}
-          </View>
-        ) : null}
+              <>
+                <Section title={en.quests.priorityMission}>
+                  {mission ? (
+                    <QuestCard
+                        onPress={() => open(mission)}
+                        title={mission.kind === 'task' ? mission.task.title : mission.habit.title}
+                        subtitle={categoryName(mission.kind === 'task' ? mission.task.categoryId : mission.habit.categoryId)}
+                        right={
+                          <Pressable
+                            onPress={() => start(mission)}
+                            hitSlop={8}
+                            style={styles.missionStart}
+                            accessibilityRole="button"
+                            accessibilityLabel={en.quests.start}
+                          >
+                            <MaterialCommunityIcons name="play-circle-outline" size={34} color={colors.actionBright} />
+                            {focusMin ? <Text style={styles.missionMin}>{en.onboarding.minutes(focusMin)}</Text> : null}
+                          </Pressable>
+                        }
+                      />
+                  ) : (
+                    <Text style={styles.hint}>{en.quests.missionHint}</Text>
+                  )}
+                </Section>
 
-        {tab === 'all' ? (
-          <Panel alpha={panelAlpha.quests} style={styles.stack}>
-            <Text style={styles.section}>{en.quests.tasks}</Text>
-            {allOpenTasks.map((task) => (
-              <QuestRow
-                key={task.id}
-                row={{ kind: 'task', task, overdue: false }}
-                onToggleComplete={() => void toggleTaskComplete(db, systemClock, task.id, today)}
-                onStart={() => router.push(`/focus?taskId=${encodeURIComponent(task.id)}` as Href)}
-                onSetMission={() => void setPriorityMission(db, systemClock, { kind: 'task', id: task.id })}
-              />
-            ))}
-            <Text style={styles.section}>{en.quests.habits}</Text>
-            {activeHabits.map((habit) => (
-              <PressableHabitRow
-                key={habit.id}
-                title={habit.title}
-                onPress={() =>
-                  router.push({ pathname: '/quest/habit/[id]', params: { id: habit.id } } as Href)
-                }
-              />
-            ))}
-          </Panel>
-        ) : null}
+                <Section title={en.quests.tasks}>
+                  {todayTasks.length > 0 ? (
+                    <QuestGroup>{renderRows(todayTasks)}</QuestGroup>
+                  ) : (
+                    <Text style={styles.hint}>{en.quests.noTasks}</Text>
+                  )}
+                </Section>
 
-        <Button label={en.quests.addQuest} onPress={() => router.push('/quest/new' as Href)} />
+                <Section title={en.quests.habits}>
+                  {todayHabits.length > 0 ? (
+                    <QuestGroup>{renderRows(todayHabits)}</QuestGroup>
+                  ) : (
+                    <Text style={styles.hint}>{en.quests.noHabits}</Text>
+                  )}
+                </Section>
+              </>
+            )
+          ) : null}
+
+          {tab === 'all' ? (
+            <>
+              <Section title={en.quests.tasks}>
+                {allOpenTasks.length > 0 ? (
+                  <QuestGroup>{renderRows(allOpenTasks.map((task) => ({ kind: 'task', task, overdue: false })))}</QuestGroup>
+                ) : (
+                  <Text style={styles.hint}>{en.quests.noTasks}</Text>
+                )}
+              </Section>
+              <Section title={en.quests.habits}>
+                {activeHabits.length > 0 ? (
+                  <QuestGroup>
+                    {activeHabits.map((habit, index) => (
+                      <Pressable
+                        key={habit.id}
+                        onPress={() => router.push({ pathname: '/quest/habit/[id]', params: { id: habit.id } })}
+                        style={({ pressed }) => [styles.habitRow, index > 0 && styles.separated, pressed && styles.pressed]}
+                        accessibilityRole="button"
+                      >
+                        <MaterialCommunityIcons name="repeat" size={22} color={colors.actionBright} />
+                        <Text style={styles.habitTitle} numberOfLines={1}>
+                          {habit.title}
+                        </Text>
+                        <Text style={styles.habitDays} numberOfLines={1}>
+                          {habitDays(habit)}
+                        </Text>
+                        <MaterialCommunityIcons name="chevron-right" size={22} color={colors.textMuted} />
+                      </Pressable>
+                    ))}
+                  </QuestGroup>
+                ) : (
+                  <Text style={styles.hint}>{en.quests.noHabits}</Text>
+                )}
+              </Section>
+            </>
+          ) : null}
+
+          <Button label={en.quests.addQuest} icon="plus" large onPress={() => router.push('/quest/new' as Href)} />
+        </Panel>
       </ScrollView>
     </TabScene>
   );
 }
 
-function PressableHabitRow({ title, onPress }: { title: string; onPress: () => void }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Text onPress={onPress} style={styles.habitLink}>
-      {title}
-    </Text>
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle} accessibilityRole="header">
+        {title}
+      </Text>
+      {children}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg, gap: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm },
+  card: { gap: space.lg },
   title: { ...type.title, color: colors.text },
-  stack: { gap: space.md },
-  section: { ...type.h2, color: colors.text },
-  habitLink: { ...type.body, color: colors.actionBright, minHeight: 44, textAlignVertical: 'center' },
+  section: { gap: space.sm },
+  sectionTitle: { ...type.h2, fontWeight: '700', color: colors.text },
+  hint: { ...type.label, fontWeight: '400', color: colors.textMuted },
+  missionStart: { alignItems: 'center', gap: 2 },
+  missionMin: { ...type.caption, color: colors.textMuted },
+  habitRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 52, paddingHorizontal: space.md },
+  separated: { borderTopWidth: border.thin, borderTopColor: colors.cellBorder },
+  pressed: { backgroundColor: 'rgba(47,123,255,0.08)' },
+  habitTitle: { ...type.body, color: colors.text, flex: 1 },
+  habitDays: { ...type.label, fontWeight: '400', color: colors.textMuted },
 });

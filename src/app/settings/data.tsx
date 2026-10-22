@@ -76,7 +76,7 @@ export default function SettingsDataScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm },
   panel: { gap: space.md },
   title: { ...type.title, color: colors.text },
   value: { ...type.body, color: colors.text },

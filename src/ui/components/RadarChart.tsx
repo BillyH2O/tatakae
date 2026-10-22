@@ -1,5 +1,5 @@
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Circle, G, Line, Polygon, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, G, Line, Polygon, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 
 import type { RadarAxisId, RadarAxisResult } from '../../domain/radar';
 import { en } from '../../i18n/en';
@@ -8,8 +8,8 @@ import { radarAxisA11y } from './radarText';
 
 const VIEW = 200;
 const CENTER = VIEW / 2;
-const RADIUS = 64;
-const LABEL_RADIUS = RADIUS + 22;
+const RADIUS = 62;
+const LABEL_RADIUS = RADIUS + 20;
 const RINGS = [1 / 3, 2 / 3, 1] as const;
 const HIT_SIZE = 44;
 /** SVG text does not inherit the app font on web (it falls back to a serif). */
@@ -22,11 +22,18 @@ const ANGLES: Record<RadarAxisId, number> = {
   mental: Math.PI / 2,
   consistency: Math.PI,
 };
+const AXIS_ORDER: readonly RadarAxisId[] = ['strength', 'endurance', 'mental', 'consistency'];
 
 const point = (axis: RadarAxisId, radius: number) => ({
   x: CENTER + Math.cos(ANGLES[axis]) * radius,
   y: CENTER + Math.sin(ANGLES[axis]) * radius,
 });
+
+const diamond = (radius: number) =>
+  AXIS_ORDER.map((axis) => {
+    const p = point(axis, radius);
+    return `${p.x},${p.y}`;
+  }).join(' ');
 
 /**
  * Pure helper (tested): the vertices actually drawn. An axis without enough data has no vertex;
@@ -44,7 +51,7 @@ interface Props {
   onSelect: (axis: RadarAxisId) => void;
 }
 
-/** Four-axis radar. The exact values and explanations live in `RadarLegend` (always rendered). */
+/** Four-axis radar on a diamond grid. The values and explanations are given as text by `RadarLegend`. */
 export function RadarChart({ axes, selected, onSelect }: Props) {
   const vertices = radarVertices(axes);
   const polygon = vertices.length >= 3 ? vertices.map((vertex) => `${vertex.x},${vertex.y}`).join(' ') : null;
@@ -52,14 +59,21 @@ export function RadarChart({ axes, selected, onSelect }: Props) {
   return (
     <View style={styles.box} accessibilityLabel={en.home.form.chartA11y}>
       <Svg width="100%" height="100%" viewBox={`0 0 ${VIEW} ${VIEW}`}>
+        <Defs>
+          <RadialGradient id="radarFill" cx="50%" cy="50%" r="50%">
+            <Stop offset="0" stopColor={colors.barBright} stopOpacity={0.55} />
+            <Stop offset="1" stopColor={colors.bar} stopOpacity={0.3} />
+          </RadialGradient>
+        </Defs>
+        <Polygon points={diamond(RADIUS)} fill="rgba(24,52,104,0.35)" />
         {RINGS.map((ring) => (
-          <Circle key={ring} cx={CENTER} cy={CENTER} r={RADIUS * ring} fill="none" stroke={colors.cellBorder} strokeWidth={1} />
+          <Polygon key={ring} points={diamond(RADIUS * ring)} fill="none" stroke={colors.border} strokeWidth={1} />
         ))}
-        {axes.map((axis) => {
-          const end = point(axis.axis, RADIUS);
-          return <Line key={axis.axis} x1={CENTER} y1={CENTER} x2={end.x} y2={end.y} stroke={colors.border} strokeWidth={1} />;
+        {AXIS_ORDER.map((axis) => {
+          const end = point(axis, RADIUS);
+          return <Line key={axis} x1={CENTER} y1={CENTER} x2={end.x} y2={end.y} stroke={colors.cellBorder} strokeWidth={1} />;
         })}
-        {polygon ? <Polygon points={polygon} fill="rgba(47,140,255,0.38)" stroke={colors.barBright} strokeWidth={2} /> : null}
+        {polygon ? <Polygon points={polygon} fill="url(#radarFill)" stroke={colors.barBright} strokeWidth={2} /> : null}
         {axes.map((axis) => {
           const label = point(axis.axis, LABEL_RADIUS);
           const vertex = vertices.find((candidate) => candidate.axis === axis.axis);
@@ -68,16 +82,21 @@ export function RadarChart({ axes, selected, onSelect }: Props) {
             <G key={axis.axis}>
               <SvgText
                 x={label.x}
-                y={label.y + 4}
-                fontSize={12}
+                y={label.y + 5}
+                fontSize={14}
                 fontFamily={FONT_FAMILY}
-                fontWeight={isSelected ? '700' : '500'}
+                fontWeight={isSelected ? '700' : '600'}
                 textAnchor="middle"
-                fill={isSelected ? colors.actionBright : colors.textMuted}
+                fill={isSelected ? colors.text : colors.textMuted}
               >
                 {en.home.form.axesShort[axis.axis]}
               </SvgText>
-              {vertex ? <Circle cx={vertex.x} cy={vertex.y} r={isSelected ? 6 : 4} fill={colors.actionBright} /> : null}
+              {vertex ? (
+                <>
+                  <Circle cx={vertex.x} cy={vertex.y} r={isSelected ? 9 : 7} fill={colors.barBright} opacity={0.25} />
+                  <Circle cx={vertex.x} cy={vertex.y} r={isSelected ? 5 : 4} fill={colors.text} />
+                </>
+              ) : null}
             </G>
           );
         })}
@@ -99,6 +118,6 @@ export function RadarChart({ axes, selected, onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
-  box: { width: '100%', aspectRatio: 1, maxWidth: 220, alignSelf: 'center' },
+  box: { width: 150, aspectRatio: 1, alignSelf: 'center' },
   hit: { position: 'absolute', width: HIT_SIZE, height: HIT_SIZE, marginLeft: -HIT_SIZE / 2, marginTop: -HIT_SIZE / 2 },
 });

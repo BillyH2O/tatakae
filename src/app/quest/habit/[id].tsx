@@ -110,7 +110,7 @@ export default function HabitDetailScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, padding: space.lg },
-  content: { padding: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm },
   panel: { gap: space.md },
   title: { ...type.title, color: colors.text },
   meta: { ...type.caption, color: colors.textMuted },

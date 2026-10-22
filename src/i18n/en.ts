@@ -123,7 +123,7 @@ export const en = {
     openStatsA11y: (label: string, value: string) => `${label}: ${value}. Open weekly stats`,
   },
   demo: {
-    banner: 'Demo mode · sample data',
+    banner: 'DEMO',
     bannerA11y: 'Demo mode is on. The data shown is generated sample data. Open data settings',
     title: 'Data & demo mode',
     intro:
@@ -210,6 +210,10 @@ export const en = {
     addQuest: 'Add a quest',
     start: 'Start',
     setMission: 'Set as mission',
+    missionHint: 'Long-press a quest to make it your priority mission.',
+    noTasks: 'No tasks for today.',
+    noHabits: 'No habits planned today.',
+    everyDay: 'Every day',
     weekProgress: (done: number, planned: number) => `${done}/${planned} this week`,
     newTask: 'New task',
     newHabit: 'New habit',
@@ -421,6 +425,7 @@ export const en = {
       dayTitle: (day: string) => `Quests · ${day}`,
       empty: 'No quests for this day.',
       seeAll: 'See all quests',
+      seeAllCount: (count: number) => `See all ${count} quests`,
       addQuest: 'Add a quest',
     },
   },

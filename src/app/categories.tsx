@@ -40,7 +40,7 @@ export default function CategoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.lg, gap: space.lg },
+  content: { paddingHorizontal: space.md, paddingVertical: space.sm, gap: space.lg },
   panel: { gap: space.md },
   title: { ...type.title, color: colors.text },
   caption: { ...type.caption, color: colors.textMuted },
