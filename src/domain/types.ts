@@ -59,3 +59,45 @@ export interface XpTransaction {
   ruleVersion: string;
   createdAt: EpochMs;
 }
+
+export type TaskPriority = 0 | 1 | 2;
+export type TaskStatus = 'open' | 'done' | 'archived';
+
+export interface Task {
+  id: string;
+  title: string;
+  categoryId: string | null;
+  dueDate: LocalDate | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  completedAt: EpochMs | null;
+  completedLocalDate: LocalDate | null;
+  createdAt: EpochMs;
+  updatedAt: EpochMs;
+}
+
+export type HabitStatus = 'active' | 'archived';
+export type OccurrenceStatus = 'pending' | 'done';
+
+export interface Habit {
+  id: string;
+  title: string;
+  categoryId: string | null;
+  weekdaysMask: number;
+  reminderTime: string | null;
+  status: HabitStatus;
+  startLocalDate: LocalDate;
+  archivedLocalDate: LocalDate | null;
+  createdAt: EpochMs;
+  updatedAt: EpochMs;
+}
+
+export interface HabitOccurrence {
+  id: string;
+  habitId: string;
+  localDate: LocalDate;
+  status: OccurrenceStatus;
+  completedAt: EpochMs | null;
+  createdAt: EpochMs;
+  updatedAt: EpochMs;
+}

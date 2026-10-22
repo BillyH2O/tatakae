@@ -7,11 +7,14 @@ import {
   appStateRepo,
   archiveCategory,
   createCategory,
+  createHabit,
   createProfile,
   getProfile,
+  insertOccurrencesIgnore,
   insertXpOnce,
   listCategories,
   listDailyGoalVersions,
+  listOccurrencesForHabit,
   listWeeklyGoalVersions,
   reorderCategories,
   restoreCategory,
@@ -137,6 +140,28 @@ describe('xp repository (anti double reward)', () => {
 
   it('starts at zero', async () => {
     expect(await totalXp(await createMigratedDb())).toBe(0);
+  });
+});
+
+describe('habit occurrences repository', () => {
+  it('insertOccurrencesIgnore is idempotent per habit and date', async () => {
+    const db = await createMigratedDb();
+    await createHabit(
+      db,
+      {
+        id: 'h1',
+        title: 'Read',
+        categoryId: null,
+        weekdaysMask: 127,
+        reminderTime: null,
+        startLocalDate: d('2026-10-22'),
+      },
+      T0,
+    );
+    const row = { id: 'o1', habitId: 'h1', localDate: d('2026-10-22') };
+    expect(await insertOccurrencesIgnore(db, [row], T0)).toBe(1);
+    expect(await insertOccurrencesIgnore(db, [{ ...row, id: 'o2' }], T0 + 1)).toBe(0);
+    expect(await listOccurrencesForHabit(db, 'h1')).toHaveLength(1);
   });
 });
 

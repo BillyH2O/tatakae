@@ -3,8 +3,8 @@
 Application mobile de **focus et d'habitudes** au thème RPG/anime bleu (Expo, React Native, TypeScript strict).
 Sans compte, hors ligne, données locales (SQLite). Interface en anglais, code en anglais.
 
-> Statut : étape 04 (profil et réglages). Onboarding au premier lancement, écran Profil, réglages (objectifs,
-> catégories, durées timer). Home / Quêtes / Stats / Focus restent provisoires.
+> Statut : étape 05 (quêtes). Tâches et habitudes avec occurrences, écran Quêtes (Today / All), création et détail,
+> mission prioritaire, route Focus en stub (timer à l’étape suivante). Home / Stats restent provisoires.
 > Les fonctionnalités arrivent étape par étape (une branche / PR par étape, empilées).
 
 ## Documentation
@@ -24,6 +24,8 @@ Sans compte, hors ligne, données locales (SQLite). Interface en anglais, code e
 - Profil : avatar, pseudo, niveau + barre XP, cristaux (lecture seule), stats cumulées, lien Réglages.
 - Réglages : objectifs versionnés (« Applies from today »), catégories (créer, renommer, archiver, réordonner), timer par défaut.
 - Bandeau permanent branché sur SQLite (pseudo réel après onboarding ; « Today / Week » avec objectifs).
+- Quêtes : tâches (échéance, priorité, complétion, archive), habitudes (jours de la semaine, occurrences matérialisées),
+  liste Today (retards, mission, habitudes de la journée) et All ; « Start » ouvre `/focus` (écran placeholder).
 - Rien de natif n'est testé (iOS/Android) : seule la version web a été exécutée.
 
 ## Lancer le projet

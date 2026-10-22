@@ -1,5 +1,7 @@
 export * from './categories';
 export * from './focus';
+export * from './tasks';
+export * from './habits';
 export * from './goals';
 export * from './keyValue';
 export * from './profile';
