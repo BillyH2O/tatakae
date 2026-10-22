@@ -12,6 +12,7 @@ import { systemClock } from '../../services/clock';
 import { newId } from '../../services/ids';
 import { Button } from '../../ui/components/Button';
 import { Panel } from '../../ui/components/Panel';
+import { ReminderField, isReminderValid, reminderValue } from '../../ui/components/ReminderField';
 import { SegmentedControl } from '../../ui/components/SegmentedControl';
 import { colors, panelAlpha, space, type } from '../../ui/theme/tokens';
 
@@ -24,7 +25,9 @@ export default function NewQuestScreen() {
   const [title, setTitle] = useState('');
   const [days, setDays] = useState<IsoWeekday[]>([1, 2, 3, 4, 5]);
   const [due, setDue] = useState<'none' | 'today' | 'tomorrow'>('none');
+  const [reminder, setReminder] = useState('');
   const [loading, setLoading] = useState(false);
+  const canSave = title.trim() !== '' && (kind === 'task' || isReminderValid(reminder));
 
   const toggleDay = (day: IsoWeekday) => {
     setDays((current) =>
@@ -33,7 +36,7 @@ export default function NewQuestScreen() {
   };
 
   const save = async () => {
-    if (!title.trim()) return;
+    if (!canSave) return;
     setLoading(true);
     try {
       const id = newId();
@@ -57,7 +60,7 @@ export default function NewQuestScreen() {
             title: title.trim(),
             categoryId: null,
             weekdaysMask: maskFromWeekdays(days),
-            reminderTime: null,
+            reminderTime: reminderValue(reminder),
           },
           newId,
         );
@@ -99,24 +102,27 @@ export default function NewQuestScreen() {
               onChange={setDue}
             />
           ) : (
-            <View style={styles.days}>
-              {en.weekdays.short.map((label, index) => {
-                const day = (index + 1) as IsoWeekday;
-                const selected = days.includes(day);
-                return (
-                  <Text
-                    key={label}
-                    onPress={() => toggleDay(day)}
-                    style={[styles.dayChip, selected && styles.dayChipOn]}
-                  >
-                    {label}
-                  </Text>
-                );
-              })}
-            </View>
+            <>
+              <View style={styles.days}>
+                {en.weekdays.short.map((label, index) => {
+                  const day = (index + 1) as IsoWeekday;
+                  const selected = days.includes(day);
+                  return (
+                    <Text
+                      key={label}
+                      onPress={() => toggleDay(day)}
+                      style={[styles.dayChip, selected && styles.dayChipOn]}
+                    >
+                      {label}
+                    </Text>
+                  );
+                })}
+              </View>
+              <ReminderField value={reminder} onChange={setReminder} />
+            </>
           )}
         </Panel>
-        <Button label={en.settings.save} onPress={save} loading={loading} disabled={!title.trim()} />
+        <Button label={en.settings.save} onPress={save} loading={loading} disabled={!canSave} />
       </ScrollView>
     </KeyboardAvoidingView>
   );

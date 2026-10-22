@@ -12,6 +12,7 @@ import { en, formatDuration, formatTimeOfDay } from '../../i18n/en';
 import { systemClock } from '../../services/clock';
 import { playSessionEndHaptic } from '../../services/feedback';
 import { newId } from '../../services/ids';
+import { syncAllNotifications, syncTimerNotifications } from '../../services/notificationService';
 import {
   type FinishOptions,
   finishSession,
@@ -65,6 +66,8 @@ export function SessionRuntime() {
       }
       if (outcome.type === 'autoCompleted') playSessionEndHaptic();
       await heartbeat(db, systemClock);
+      // Idempotent: also reschedules after the app was killed or the permission was just granted.
+      await syncTimerNotifications(db, systemClock);
     } finally {
       reconcilingRef.current = false;
     }
@@ -74,6 +77,11 @@ export function SessionRuntime() {
   useEffect(() => {
     void runReconcile();
   }, [runReconcile]);
+
+  // Launch: habit reminders (and timer alerts) realigned with the stored state, once.
+  useEffect(() => {
+    void syncAllNotifications(db, systemClock);
+  }, [db]);
 
   // Foreground: reconcile first (it reads the stored heartbeat); background: write the heartbeat.
   useEffect(() => {

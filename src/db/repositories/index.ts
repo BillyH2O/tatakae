@@ -4,6 +4,7 @@ export * from './tasks';
 export * from './habits';
 export * from './goals';
 export * from './keyValue';
+export * from './notifications';
 export * from './profile';
 export * from './profileStats';
 export * from './sessions';

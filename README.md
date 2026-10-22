@@ -33,8 +33,28 @@ Sans compte, hors ligne, données locales (SQLite). Interface en anglais, code e
   (note facultative, XP, « Complete quest » explicite, pause de 5 min) réapparaît après un redémarrage tant qu'il
   n'est pas fermé. Les totaux du bandeau incluent la session en cours en direct.
 - « Keep screen on » (réglage, désactivé par défaut) et le retour haptique de fin de session sont câblés mais **non
-  testés sur appareil**. Aucune notification de fin de session avant l'étape « notifications » ; le blocage des distractions
-  reste indisponible (« Distraction blocking is not available in this version »).
+  testés sur appareil**. Le blocage des distractions reste indisponible (« Distraction blocking is not available in
+  this version »).
+- Notifications locales (`notificationService`, derrière un port `NotificationsPort` ; `expo-notifications` n'est
+  touché que dans `src/services/notifications/expoPort.ts`, la version web est un no-op) :
+  - fin de session (`session-end`) programmée à l'échéance d'un compte à rebours au démarrage / à la reprise,
+    annulée à la pause, à la fin, à l'abandon ; fin de pause (`break-end`) ; resynchronisation idempotente au
+    lancement et au retour au premier plan (échéance dépassée : rien n'est planifié) ;
+  - rappels d'habitudes : un déclencheur hebdomadaire par jour planifié (jour ISO → jour expo), resynchronisés à
+    chaque création / modification / archivage et au lancement, plafonnés à `PRODUCT.notifications.maxHabitReminders`
+    (avertissement dans Réglages > Notifications) ; l'heure se saisit en `HH:MM` à la création et sur la fiche habitude ;
+  - permission demandée une seule fois, en contexte (premier compte à rebours, ou activation d'un rappel), après la
+    création des canaux Android (`timer` HIGH, `reminders` DEFAULT) ; un refus ne bloque jamais le timer ni les
+    quêtes ; Réglages > Notifications montre l'état, renvoie vers les réglages système et propose « Allow exact time »
+    (Android, `SCHEDULE_EXACT_ALARM` déclaré) ;
+  - au premier plan, les alertes de fin de session / pause n'affichent pas de bannière (l'écran réagit déjà), les
+    rappels d'habitudes oui.
+- **Testé** : calcul des jours (ISO → expo), plan et plafond des rappels, planification / annulation à chaque transition
+  (port factice en mémoire), idempotence, permission refusée, échec du planificateur, formes des déclencheurs et des
+  canaux avec `expo-notifications` simulé. **Non testé** : l'arrivée réelle d'une notification sur iOS / Android
+  (appli fermée, mode économie d'énergie, redémarrage de l'appareil, « Allow exact time »), la boîte de dialogue de
+  permission système, la persistance des déclencheurs après redémarrage. Les rappels hebdomadaires n'ont pas non plus
+  été observés sur appareil.
 - Rien de natif n'est testé (iOS/Android) : seule la version web a été exécutée.
 
 ## Lancer le projet

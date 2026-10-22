@@ -361,7 +361,7 @@ describe('break', () => {
     expect(await getActiveBreak(env.db)).toEqual({ startedAt: START, durationSec: 300 });
     expect(env.db.raw.prepare('SELECT COUNT(*) AS n FROM sessions').get()).toEqual({ n: 0 });
     expect(await totalXp(env.db)).toBe(0);
-    await endBreak(env.db);
+    await endBreak(env.db, env.clock);
     expect(await getActiveBreak(env.db)).toBeNull();
   });
 
@@ -376,7 +376,7 @@ describe('break', () => {
   it('a break leaves no trace in app_state once ended', async () => {
     const env = await setup();
     await startBreak(env.db, env.clock, 300);
-    await endBreak(env.db);
+    await endBreak(env.db, env.clock);
     expect(await appStateRepo.get(env.db, 'activeBreak')).toBeNull();
   });
 });

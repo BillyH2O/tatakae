@@ -1,10 +1,16 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { habitCalendarState, weekdaysFromMask, type HabitSchedule } from '../../../domain/habits';
 import { monthDays } from '../../../domain/time/localDate';
-import { getHabit, listOccurrencesForHabit, archiveHabitQuest } from '../../../services/questService';
+import {
+  archiveHabitQuest,
+  getHabit,
+  listOccurrencesForHabit,
+  updateHabitReminder,
+} from '../../../services/questService';
+import { useSingleFlight } from '../../../hooks/useSingleFlight';
 import { useQuery } from '../../../hooks/useQuery';
 import { useToday } from '../../../hooks/useToday';
 import { useDb } from '../../../hooks/useDb';
@@ -12,7 +18,28 @@ import { en } from '../../../i18n/en';
 import { systemClock } from '../../../services/clock';
 import { Button } from '../../../ui/components/Button';
 import { Panel } from '../../../ui/components/Panel';
+import { ReminderField, isReminderValid, reminderValue } from '../../../ui/components/ReminderField';
 import { colors, panelAlpha, space, type } from '../../../ui/theme/tokens';
+
+function ReminderEditor({ habitId, current }: { habitId: string; current: string | null }) {
+  const db = useDb();
+  const [text, setText] = useState(current ?? '');
+  const [busy, run] = useSingleFlight();
+  const changed = reminderValue(text) !== current;
+
+  return (
+    <View style={styles.editor}>
+      <ReminderField value={text} onChange={setText} />
+      <Button
+        label={en.quests.reminderSave}
+        variant="ghost"
+        disabled={!changed || !isReminderValid(text)}
+        loading={busy}
+        onPress={() => void run(() => updateHabitReminder(db, systemClock, habitId, reminderValue(text)))}
+      />
+    </View>
+  );
+}
 
 export default function HabitDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -54,6 +81,7 @@ export default function HabitDetailScreen() {
             .map((day) => en.weekdays.short[day - 1])
             .join(' · ')}
         </Text>
+        <ReminderEditor key={`${habit.id}:${habit.reminderTime ?? ''}`} habitId={habit.id} current={habit.reminderTime} />
         <Text style={styles.section}>{en.quests.calendarLegend}</Text>
         <View style={styles.grid}>
           {month.map((day) => {
@@ -86,6 +114,7 @@ const styles = StyleSheet.create({
   panel: { gap: space.md },
   title: { ...type.title, color: colors.text },
   meta: { ...type.caption, color: colors.textMuted },
+  editor: { gap: space.sm },
   section: { ...type.label, color: colors.textMuted },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   cell: {

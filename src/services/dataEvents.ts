@@ -6,7 +6,8 @@ export type DataTopic =
   | 'categories'
   | 'xp'
   | 'wallet'
-  | 'settings';
+  | 'settings'
+  | 'notifications';
 
 type Listener = (topics: readonly DataTopic[]) => void;
 

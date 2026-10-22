@@ -13,6 +13,7 @@ import { en } from '../../i18n/en';
 import { systemClock } from '../../services/clock';
 import { dataEvents } from '../../services/dataEvents';
 import { newId } from '../../services/ids';
+import { requestPermissionInContext } from '../../services/notificationService';
 import { loadQuestTarget, startSession } from '../../services/sessionService';
 import { getTimerSettings } from '../../services/settingsService';
 import { Button } from '../components/Button';
@@ -66,6 +67,8 @@ export function PrepareView({ taskId, occurrenceId }: Props) {
 
   const start = () =>
     run(async () => {
+      // Only a countdown needs an end alert. Asked once, in context; a refusal never blocks the session.
+      if (mode === 'countdown') await requestPermissionInContext(db, systemClock);
       const result = await startSession(db, systemClock, newId, {
         mode,
         plannedSec: mode === 'countdown' ? minutes * 60 : null,

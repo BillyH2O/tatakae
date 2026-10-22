@@ -33,6 +33,7 @@ import { xpForFocusedSec } from '../domain/xp';
 import type { Clock } from './clock';
 import { dataEvents } from './dataEvents';
 import type { IdGenerator } from './ids';
+import { syncTimerNotifications } from './notificationService';
 import { clearPriorityMissionIfInvalid } from './questService';
 
 export interface StartSessionInput {
@@ -84,7 +85,10 @@ export async function startSession(
       await appStateRepo.remove(tx, APP_STATE_KEYS.activeBreak);
       return { ok: true, sessionId: id };
     });
-    if (result.ok) dataEvents.emit('sessions');
+    if (result.ok) {
+      dataEvents.emit('sessions');
+      await syncTimerNotifications(db, clock);
+    }
     return result;
   } catch (error) {
     if (!isUniqueConstraintError(error)) throw error;
@@ -101,6 +105,7 @@ export async function pauseSession(db: SqlDb, clock: Clock, newId: IdGenerator, 
     if ((await markPaused(tx, sessionId, now)) === 1) await insertPause(tx, newId(), sessionId, now);
   });
   dataEvents.emit('sessions');
+  await syncTimerNotifications(db, clock);
 }
 
 /** Idempotent: resuming a session that is not paused changes nothing. */
@@ -110,6 +115,7 @@ export async function resumeSession(db: SqlDb, clock: Clock, sessionId: string):
     if ((await markRunning(tx, sessionId, now)) === 1) await closeOpenPause(tx, sessionId, now);
   });
   dataEvents.emit('sessions');
+  await syncTimerNotifications(db, clock);
 }
 
 /** Heartbeat written while the app is in the foreground and when it goes to the background. */
@@ -207,6 +213,7 @@ export async function finishSession(
     return { session: updated, finalizedNow: true };
   });
   if (result.finalizedNow) dataEvents.emit('sessions', 'xp');
+  await syncTimerNotifications(db, clock);
   return result;
 }
 
@@ -357,9 +364,11 @@ export async function startBreak(db: SqlDb, clock: Clock, durationSec: number): 
     await appStateRepo.remove(tx, APP_STATE_KEYS.pendingSummarySessionId);
   });
   dataEvents.emit('sessions');
+  await syncTimerNotifications(db, clock);
 }
 
-export async function endBreak(db: SqlDb): Promise<void> {
+export async function endBreak(db: SqlDb, clock: Clock): Promise<void> {
   await appStateRepo.remove(db, APP_STATE_KEYS.activeBreak);
   dataEvents.emit('sessions');
+  await syncTimerNotifications(db, clock);
 }

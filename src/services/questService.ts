@@ -24,12 +24,20 @@ import {
 import { appStateRepo } from '../db/repositories/keyValue';
 import type { SqlDb } from '../db/SqlDb';
 import { occurrenceDatesToEnsure } from '../domain/habits';
+import { parseReminderTime } from '../domain/notifications';
 import { sanitizePriorityMission } from '../domain/quests';
 import { addDays, toLocalDate } from '../domain/time/localDate';
 import type { Habit, LocalDate, TaskPriority } from '../domain/types';
 import type { Clock } from './clock';
 import { dataEvents } from './dataEvents';
 import type { IdGenerator } from './ids';
+import { requestPermissionInContext, syncHabitReminders } from './notificationService';
+
+/** Habit reminders follow the habits: resynced after any change (asks the permission in context). */
+async function resyncHabitReminders(db: SqlDb, clock: Clock, askPermission: boolean): Promise<void> {
+  if (askPermission) await requestPermissionInContext(db, clock);
+  await syncHabitReminders(db, clock);
+}
 
 function habitSchedule(habit: Habit) {
   return {
@@ -120,6 +128,22 @@ export async function createHabitQuest(
     await materializeHabit(tx, habit, today, horizon, newId, clock.now());
   });
   dataEvents.emit('quests');
+  await resyncHabitReminders(db, clock, input.reminderTime !== null);
+}
+
+/** Sets or clears (`null`) the weekly reminder of a habit; the time is validated by the caller. */
+export async function updateHabitReminder(
+  db: SqlDb,
+  clock: Clock,
+  habitId: string,
+  reminderTime: string | null,
+): Promise<void> {
+  if (reminderTime !== null && parseReminderTime(reminderTime) === null) {
+    throw new Error('Reminder time must be a 24 h HH:MM time');
+  }
+  await updateHabit(db, habitId, { reminderTime }, clock.now());
+  dataEvents.emit('quests');
+  await resyncHabitReminders(db, clock, reminderTime !== null);
 }
 
 export async function updateHabitSchedule(
@@ -142,6 +166,7 @@ export async function updateHabitSchedule(
     await materializeHabit(tx, after, addDays(today, 1), horizon, newId, clock.now());
   });
   dataEvents.emit('quests');
+  await resyncHabitReminders(db, clock, false);
 }
 
 export async function setPriorityMission(db: SqlDb, clock: Clock, mission: PriorityMission): Promise<void> {
@@ -192,6 +217,7 @@ export async function archiveHabitQuest(db: SqlDb, clock: Clock, habitId: string
   await archiveHabit(db, habitId, today, clock.now());
   await clearPriorityMissionIfInvalid(db, clock);
   dataEvents.emit('quests');
+  await resyncHabitReminders(db, clock, false);
 }
 
 export async function loadQuestContext(db: SqlDb, date: LocalDate) {

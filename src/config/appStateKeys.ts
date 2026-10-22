@@ -4,6 +4,14 @@ export const APP_STATE_KEYS = {
   occurrencesEnsuredThrough: 'occurrencesEnsuredThrough',
   pendingSummarySessionId: 'pendingSummarySessionId',
   activeBreak: 'activeBreak',
+  /** True once the system permission prompt has been shown (it is only asked in context, once). */
+  notificationPermissionAsked: 'notificationPermissionAsked',
+} as const;
+
+/** Keys of the single scheduled notifications (`scheduled_notifications.key`). */
+export const NOTIFICATION_KEYS = {
+  sessionEnd: 'session-end',
+  breakEnd: 'break-end',
 } as const;
 
 /** A short break in progress. Never counted as focus, never creates a session. */

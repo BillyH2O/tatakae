@@ -5,6 +5,7 @@ import { useDb } from '../../hooks/useDb';
 import { useNow } from '../../hooks/useNow';
 import { useSingleFlight } from '../../hooks/useSingleFlight';
 import { en, formatClock, formatDuration } from '../../i18n/en';
+import { systemClock } from '../../services/clock';
 import { endBreak } from '../../services/sessionService';
 import { Button } from '../components/Button';
 import { Panel } from '../components/Panel';
@@ -48,7 +49,7 @@ export function BreakView({ breakState }: { breakState: ActiveBreak }) {
           label={over ? en.focus.break.startSession : en.focus.break.end}
           variant={over ? 'primary' : 'ghost'}
           loading={busy}
-          onPress={() => void run(() => endBreak(db))}
+          onPress={() => void run(() => endBreak(db, systemClock))}
         />
       </View>
     </ScrollView>

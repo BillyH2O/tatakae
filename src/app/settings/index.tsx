@@ -9,6 +9,7 @@ const LINKS = [
   { href: '/settings/goals', label: en.settings.goals },
   { href: '/settings/categories', label: en.settings.categories },
   { href: '/settings/timer', label: en.settings.timer },
+  { href: '/settings/notifications', label: en.settings.notifications },
 ];
 
 export default function SettingsIndexScreen() {

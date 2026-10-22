@@ -7,7 +7,13 @@ import { AppHeader } from '../ui/components/AppHeader';
 import { ScreenBackground } from '../ui/components/ScreenBackground';
 import { ProfileGate } from '../ui/providers/ProfileGate';
 import { SessionRuntime } from '../ui/providers/SessionRuntime';
+import { configureNotifications, setupNotifications } from '../services/notificationService';
+import { createNotificationsPort } from '../services/notifications/createPort';
 import { colors, veilForPath } from '../ui/theme/tokens';
+
+// Platform adapter (no-op on web) and foreground handler/channels, installed before any screen renders.
+configureNotifications(createNotificationsPort());
+void setupNotifications();
 
 const NAV_THEME = {
   ...DarkTheme,
