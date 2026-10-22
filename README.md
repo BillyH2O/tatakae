@@ -3,7 +3,23 @@
 Application mobile de **focus et d'habitudes** au thème RPG/anime bleu (Expo, React Native, TypeScript strict).
 Sans compte, hors ligne, données locales (SQLite). Interface en français, code en anglais.
 
-> Statut : étape 01 (scaffold). Les fonctionnalités arrivent étape par étape (une branche / PR par étape).
+> Statut : étape 02 (données et domaine). Pas encore d'écran fonctionnel : l'app s'ouvre sur un écran provisoire
+> qui prouve que la base SQLite locale est créée et migrée (« Base locale prête · schéma v1 »).
+> Les fonctionnalités arrivent étape par étape (une branche / PR par étape, empilées).
+
+## Documentation
+
+- `docs/PRODUCT_SPEC.md` : spécification produit (référence unique).
+- `docs/ARCHITECTURE.md` : architecture, schéma SQL, domaine, timer, étapes ; section 11 = écarts constatés.
+- `AGENTS.md` et `.cursor/rules/` : contexte et conventions pour les assistants IA.
+- Hypothèses produit (XP, niveaux, durées, objectifs par défaut…) : **`src/config/product.ts`** (un seul fichier).
+
+## Ce qui existe à ce stade
+
+- Base SQLite (`tatakae.db`) : schéma v1 complet, migrations versionnées (`PRAGMA user_version`), transactions atomiques sérialisées.
+- Domaine pur testé : dates locales (semaine ISO, DST), répartition des sessions à cheval sur minuit, objectifs datés, XP et niveaux.
+- Repositories : profil, catégories, objectifs, XP (anti double récompense), réglages.
+- Rien de natif n'est testé (iOS/Android) : seule la version web a été exécutée.
 
 ## Lancer le projet
 
@@ -11,8 +27,10 @@ Prérequis : Node.js 22+, npm.
 
 ```bash
 npm install
-npm start          # Expo dev server (scanner le QR avec Expo Go) 
+npm start          # Expo dev server
 npm run web        # version web (utile pour les captures et le développement)
+# Le Expo Go des stores n'embarque pas encore le SDK 58 : sur téléphone, utiliser un development build
+# (npx expo run:ios / npx expo run:android, ou eas build --profile development).
 ```
 
 ## Qualité
@@ -30,5 +48,5 @@ Expo SDK 58, React Native 0.88, Expo Router (`src/app/`), expo-sqlite, react-nat
 
 ## Visuel
 
-Le fond paysage (`assets/images/tatakae-landscape.jpg`) est une illustration anime originale générée par IA
+Le fond paysage (`assets/images/landscape.jpg`) est une illustration anime originale générée par IA
 pour ce projet (aucune franchise, aucun personnage, pas de pixel art).

@@ -1,41 +1,27 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+# Tatakae — contexte pour agents IA
 
-## Expo has changed — do not trust your training data
+Application mobile Expo (SDK 58, React Native, TypeScript strict) de focus et d'habitudes, thème RPG/anime bleu. Sans compte, hors ligne, données locales SQLite.
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+**À lire avant de coder** : `docs/PRODUCT_SPEC.md` (spec produit, référence unique) puis `docs/ARCHITECTURE.md` (décisions techniques, schéma SQL, étapes ; la section 11 liste les écarts).
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+## Règles non négociables
 
-## Commands
+- UI en **français**, code/types/SQL en **anglais**. Toutes les chaînes UI dans `src/i18n/fr.ts`.
+- **Hypothèses produit** (XP, seuils, durées, objectifs par défaut…) uniquement dans `src/config/product.ts`.
+- **Logique métier = fonctions pures** dans `src/domain/` (aucun import RN/Expo/DB), avec tests unitaires. Pas de `Date.now()` direct : `Clock` injecté.
+- Une seule source pour les totaux (header, Accueil, Stats). Pas de SQL dans `src/app/` ni `src/ui/`.
+- Écritures atomiques et idempotentes (transactions via `SqlDb.transaction`), identifiants stables, jamais de double récompense XP.
+- **Jamais** d'affichage « Applications bloquées » / « Blocage actif » sans état natif confirmé ; sinon « Blocage non disponible dans cette version ».
+- Ne jamais prétendre qu'une fonction native marche si elle n'a pas été testée sur appareil. Pas d'écran « Temps d'écran », pas de règle ni de boutique de cristaux.
+- Données de démonstration uniquement via le mode démo explicite (base séparée).
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+## Commandes
 
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+npm install
+npm run check      # tsc --noEmit + expo lint + jest
+npm run web        # aperçu web
+npx expo install <paquet>   # toujours, jamais npm i pour un module Expo/natif
 ```
 
-Run lint and typecheck before declaring any task done.
-
-## Navigation & Routing
-
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
-
-## Building with EAS
-
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
-
-## Rules
-
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+Routes : Expo Router dans `src/app/`. Docs Expo versionnées : https://docs.expo.dev/versions/v58.0.0/ (l'API change à chaque SDK ; ne pas se fier à la mémoire).
