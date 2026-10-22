@@ -35,6 +35,45 @@ describe('buildFocusByDay / sumFocusRange', () => {
   });
 });
 
+describe('buildFocusByDay with a live session', () => {
+  const MIN = 60_000;
+
+  it('adds the focus so far of the active session, excluding pauses', () => {
+    const start = new Date(2026, 9, 22, 10, 0, 0).getTime();
+    const byDay = buildFocusByDay([{ localDate: TODAY, focusedSec: 600 }], {
+      session: { mode: 'stopwatch', plannedSec: null, startedAt: start },
+      pauses: [{ startedAt: start + 10 * MIN, endedAt: start + 15 * MIN }],
+      now: start + 25 * MIN,
+    });
+    expect(byDay.get(TODAY)).toBe(600 + 20 * 60);
+  });
+
+  it('keeps counting across midnight: "Today" restarts at 0 plus the live part', () => {
+    const start = new Date(2026, 9, 22, 23, 50, 0).getTime();
+    const byDay = buildFocusByDay([{ localDate: TODAY, focusedSec: 3600 }], {
+      session: { mode: 'countdown', plannedSec: 25 * 60, startedAt: start },
+      pauses: [],
+      now: start + 15 * MIN,
+    });
+    expect(byDay.get(TODAY)).toBe(3600 + 600);
+    expect(byDay.get(d('2026-10-23'))).toBe(300);
+  });
+
+  it('is unchanged without a live session', () => {
+    expect(buildFocusByDay([{ localDate: TODAY, focusedSec: 60 }], null).get(TODAY)).toBe(60);
+  });
+
+  it('does not exceed the planned time of a countdown', () => {
+    const start = new Date(2026, 9, 22, 10, 0, 0).getTime();
+    const byDay = buildFocusByDay([], {
+      session: { mode: 'countdown', plannedSec: 25 * 60, startedAt: start },
+      pauses: [],
+      now: start + 90 * MIN,
+    });
+    expect(byDay.get(TODAY)).toBe(1500);
+  });
+});
+
 describe('weekRange', () => {
   it('is Monday to Sunday, including when today is Sunday', () => {
     expect(weekRange(TODAY)).toEqual({ from: '2026-10-19', to: '2026-10-25' });

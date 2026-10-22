@@ -6,6 +6,8 @@ import type {
   IsoWeekday,
   LocalDate,
   Profile,
+  Session,
+  SessionPause,
   Task,
   TaskPriority,
   WeeklyGoalVersion,
@@ -159,4 +161,54 @@ export const toOccurrence = (row: OccurrenceRow): HabitOccurrence => ({
   completedAt: row.completed_at,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+});
+
+export interface SessionRow {
+  id: string;
+  source: string;
+  mode: string | null;
+  status: string;
+  planned_sec: number | null;
+  started_at: number;
+  ended_at: number | null;
+  last_seen_at: number | null;
+  focused_sec: number | null;
+  stop_reason: string | null;
+  category_id: string | null;
+  task_id: string | null;
+  habit_occurrence_id: string | null;
+  blocking_requested: number;
+  finalized_at: number | null;
+}
+
+export interface PauseRow {
+  id: string;
+  session_id: string;
+  started_at: number;
+  ended_at: number | null;
+}
+
+export const toSession = (row: SessionRow): Session => ({
+  id: row.id,
+  source: row.source as Session['source'],
+  mode: row.mode as Session['mode'],
+  status: row.status as Session['status'],
+  plannedSec: row.planned_sec,
+  startedAt: row.started_at,
+  endedAt: row.ended_at,
+  lastSeenAt: row.last_seen_at,
+  focusedSec: row.focused_sec,
+  stopReason: row.stop_reason as Session['stopReason'],
+  categoryId: row.category_id,
+  taskId: row.task_id,
+  habitOccurrenceId: row.habit_occurrence_id,
+  blockingRequested: row.blocking_requested === 1,
+  finalizedAt: row.finalized_at,
+});
+
+export const toPause = (row: PauseRow): SessionPause => ({
+  id: row.id,
+  sessionId: row.session_id,
+  startedAt: row.started_at,
+  endedAt: row.ended_at,
 });

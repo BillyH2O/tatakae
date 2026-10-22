@@ -76,6 +76,35 @@ export interface Task {
   updatedAt: EpochMs;
 }
 
+export type SessionMode = 'countdown' | 'stopwatch';
+export type SessionStatus = 'running' | 'paused' | 'completed' | 'stopped' | 'discarded';
+export type StopReason = 'interrupted' | 'tired' | 'quest_done' | 'other';
+
+export interface Session {
+  id: string;
+  source: 'timer' | 'manual';
+  mode: SessionMode | null;
+  status: SessionStatus;
+  plannedSec: number | null;
+  startedAt: EpochMs;
+  endedAt: EpochMs | null;
+  lastSeenAt: EpochMs | null;
+  focusedSec: number | null;
+  stopReason: StopReason | null;
+  categoryId: string | null;
+  taskId: string | null;
+  habitOccurrenceId: string | null;
+  blockingRequested: boolean;
+  finalizedAt: EpochMs | null;
+}
+
+export interface SessionPause {
+  id: string;
+  sessionId: string;
+  startedAt: EpochMs;
+  endedAt: EpochMs | null;
+}
+
 export type HabitStatus = 'active' | 'archived';
 export type OccurrenceStatus = 'pending' | 'done';
 

@@ -22,15 +22,22 @@ const breakOptions = PRODUCT.timer.breakPresetsMin.map((value) => ({
   label: en.onboarding.minutes(value),
 }));
 
+const keepOptions = [
+  { value: 'off', label: en.settings.keepScreenOff },
+  { value: 'on', label: en.settings.keepScreenOnLabel },
+];
+
 export default function SettingsTimerScreen() {
   const db = useDb();
   const router = useRouter();
   const { data, loading } = useQuery(['settings'], getTimerSettings);
   const [focus, setFocus] = useState<string | null>(null);
   const [brk, setBreak] = useState<string | null>(null);
+  const [keepOn, setKeepOn] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const focusValue = focus ?? (data ? String(data.defaultFocusMin) : String(PRODUCT.timer.defaultFocusMin));
+  const keepValue = keepOn ?? (data ? (data.keepScreenOn ? 'on' : 'off') : PRODUCT.timer.keepScreenOnDefault ? 'on' : 'off');
   const breakValue = brk ?? (data ? String(data.defaultBreakMin) : String(PRODUCT.timer.defaultBreakMin));
 
   const save = async () => {
@@ -38,6 +45,7 @@ export default function SettingsTimerScreen() {
     await saveTimerSettings(db, systemClock, {
       defaultFocusMin: Number(focusValue),
       defaultBreakMin: Number(breakValue),
+      keepScreenOn: keepValue === 'on',
     });
     setBusy(false);
     router.back();
@@ -68,6 +76,13 @@ export default function SettingsTimerScreen() {
           options={breakOptions}
           value={breakValue}
           onChange={setBreak}
+        />
+
+        <Text style={styles.label}>{en.settings.keepScreenOn}</Text>
+        <SegmentedControl
+          options={keepOptions}
+          value={keepValue}
+          onChange={setKeepOn}
         />
 
         <Button label={en.settings.save} onPress={() => void save()} loading={busy} />

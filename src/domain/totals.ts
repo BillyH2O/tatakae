@@ -1,16 +1,32 @@
 import { resolveDayGoal, resolveWeekGoal } from './goals';
+import { focusIntervals, type PauseSpan, type TimerSession } from './timer/machine';
 import { addDays, weekStart } from './time/localDate';
-import type { DailyGoalVersion, DayFocus, LocalDate, WeeklyGoalVersion } from './types';
+import { splitIntervalsByLocalDay } from './time/splitByDay';
+import type { DailyGoalVersion, DayFocus, EpochMs, LocalDate, WeeklyGoalVersion } from './types';
 
 export type FocusByDay = ReadonlyMap<LocalDate, number>;
 
+/** The running/paused session, whose focus so far is added live to the stored totals. */
+export interface LiveSession {
+  session: Pick<TimerSession, 'mode' | 'plannedSec' | 'startedAt'>;
+  pauses: readonly PauseSpan[];
+  now: EpochMs;
+}
+
 /**
  * Single source of focus totals (header, Home, Stats). Built from the per-day segments stored in
- * the database; the live active session is added in a later step.
+ * the database (finalized sessions only) plus the live focus of the active session, split by local
+ * day exactly like a finalized session would be.
  */
-export function buildFocusByDay(rows: readonly DayFocus[]): FocusByDay {
+export function buildFocusByDay(rows: readonly DayFocus[], live: LiveSession | null = null): FocusByDay {
   const map = new Map<LocalDate, number>();
   for (const row of rows) map.set(row.localDate, (map.get(row.localDate) ?? 0) + row.focusedSec);
+  if (live) {
+    const intervals = focusIntervals(live.session, live.pauses, live.now);
+    for (const day of splitIntervalsByLocalDay(intervals)) {
+      map.set(day.localDate, (map.get(day.localDate) ?? 0) + day.focusedSec);
+    }
+  }
   return map;
 }
 

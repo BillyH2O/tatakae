@@ -12,6 +12,23 @@ export function formatDuration(totalSec: number): string {
   return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, '0')}`;
 }
 
+/** Timer face: "04:05" or "1:02:03". */
+export function formatClock(totalSec: number): string {
+  const total = Math.max(0, Math.floor(totalSec));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / SEC_PER_MINUTE);
+  const seconds = total % SEC_PER_MINUTE;
+  const mm = String(minutes).padStart(2, '0');
+  const ss = String(seconds).padStart(2, '0');
+  return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+/** Local time of day for an instant: "14:05". */
+export function formatTimeOfDay(ms: number): string {
+  const date = new Date(ms);
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
 export const en = {
   app: {
     name: 'Tatakae',
@@ -87,6 +104,9 @@ export const en = {
     timerTitle: 'Timer defaults',
     defaultFocus: 'Default focus duration',
     defaultBreak: 'Short break duration',
+    keepScreenOn: 'Keep screen on during sessions',
+    keepScreenOff: 'Off',
+    keepScreenOnLabel: 'On',
     categoriesTitle: 'Categories',
     addCategory: 'Add category',
     archive: 'Archive',
@@ -134,10 +154,86 @@ export const en = {
     },
   },
   focus: {
-    stubTitle: 'Focus',
-    stubBody: 'The timer arrives in the next step. Your quest is loaded below.',
+    title: 'Focus',
     blockingUnavailable: 'Distraction blocking is not available in this version',
     freeSession: 'Free session',
+    prepare: {
+      quest: 'Quest',
+      noQuest: 'No quest',
+      clearQuest: 'Remove quest',
+      category: 'Category',
+      uncategorized: 'Uncategorized',
+      mode: 'Mode',
+      countdown: 'Countdown',
+      stopwatch: 'Free stopwatch',
+      duration: 'Duration',
+      decrease: 'Shorter',
+      increase: 'Longer',
+      start: 'Start session',
+      alreadyActive: 'A session is already running.',
+      stopwatchHint: 'No limit. You decide when to finish.',
+    },
+    running: {
+      countdownLabel: (minutes: number) => `${minutes} min session`,
+      stopwatchLabel: 'Free stopwatch',
+      paused: 'Paused',
+      pause: 'Pause',
+      resume: 'Resume',
+      finish: 'Finish',
+      discard: 'Discard',
+      tooShort: 'Under 1 minute: nothing is saved yet.',
+      finishTitle: 'Finish this session?',
+      finishBody: (focus: string) => `You focused for ${focus}. It will be saved.`,
+      reasonLabel: 'Reason (optional)',
+      reasons: {
+        interrupted: 'Interrupted',
+        tired: 'Tired',
+        quest_done: 'Quest done',
+        other: 'Other',
+      },
+      confirmFinish: 'Save and finish',
+      keepGoing: 'Keep going',
+      discardTitle: 'Discard this session?',
+      discardBody: 'Nothing will be saved.',
+      confirmDiscard: 'Discard',
+      timerA11y: (time: string) => `Timer ${time}`,
+    },
+    stopwatchGap: {
+      title: 'Welcome back',
+      body: (elapsed: string) =>
+        `Your stopwatch was left open and shows ${elapsed}. Choose what to keep before anything is recorded.`,
+      keepAll: (elapsed: string) => `Keep ${elapsed}`,
+      untilLastSeen: (time: string) => `Keep until ${time} (last activity)`,
+      enterDuration: 'Enter a duration',
+      durationLabel: (max: number) => `Minutes (up to ${max})`,
+      save: 'Save',
+      invalidDuration: 'Enter a number of minutes.',
+    },
+    summary: {
+      completeTitle: 'Session complete',
+      savedTitle: 'Session saved',
+      focused: 'Focus time',
+      xp: (amount: number) => `+${amount} XP`,
+      ratingTitle: 'How focused did you feel?',
+      ratingOptional: 'Optional',
+      ratingA11y: (value: number, max: number) => `${value} out of ${max}`,
+      skip: 'Skip',
+      questLabel: 'Quest',
+      completeQuest: 'Complete quest',
+      questCompleted: 'Quest completed',
+      takeBreak: (minutes: number) => `${minutes} min break`,
+      newSession: 'New session',
+      close: 'Close',
+      notFound: 'This session could not be found.',
+    },
+    break: {
+      title: 'Break',
+      subtitle: 'Not counted as focus.',
+      over: 'Break over',
+      overBody: 'Ready when you are. The next session only starts when you choose.',
+      startSession: 'Start a session',
+      end: 'End break',
+    },
   },
   placeholder: {
     comingSoon: 'Coming in a later step.',

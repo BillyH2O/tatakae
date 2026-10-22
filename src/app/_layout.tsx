@@ -6,6 +6,7 @@ import { DbProvider } from '../db/DbProvider';
 import { AppHeader } from '../ui/components/AppHeader';
 import { ScreenBackground } from '../ui/components/ScreenBackground';
 import { ProfileGate } from '../ui/providers/ProfileGate';
+import { SessionRuntime } from '../ui/providers/SessionRuntime';
 import { colors, veilForPath } from '../ui/theme/tokens';
 
 const NAV_THEME = {
@@ -27,6 +28,7 @@ function AppShell() {
       <View style={styles.body}>
         <Stack screenOptions={{ headerShown: false, contentStyle: styles.transparent }} />
       </View>
+      <SessionRuntime />
     </>
   );
 }

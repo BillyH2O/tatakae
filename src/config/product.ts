@@ -20,6 +20,11 @@ export const PRODUCT = {
     focusPresetsMin: [15, 25, 45, 60],
     minFocusMin: 5,
     maxFocusMin: 180,
+    customStepMin: 5,
+    // HYPOTHÈSE PRODUIT — modifiable : garder l'écran allumé pendant une session (désactivé par défaut).
+    keepScreenOnDefault: false,
+    // Optional felt-focus rating scale shown on the session summary (1..N).
+    ratingMax: 5,
     // HYPOTHÈSE PRODUIT — modifiable : pause courte par défaut (5 min) et préréglages.
     defaultBreakMin: 5,
     breakPresetsMin: [3, 5, 10, 15],

@@ -6,4 +6,5 @@ export * from './goals';
 export * from './keyValue';
 export * from './profile';
 export * from './profileStats';
+export * from './sessions';
 export * from './xp';
