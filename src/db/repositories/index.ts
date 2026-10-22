@@ -10,3 +10,4 @@ export * from './profileStats';
 export * from './sessions';
 export * from './xp';
 export * from './demo';
+export * from './stats';

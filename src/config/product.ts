@@ -103,7 +103,12 @@ export const PRODUCT = {
     earningRules: [],
     shopEnabled: false,
   },
-  stats: { heatmapWeeks: 18, historyPageSize: 20 },
+  stats: {
+    heatmapWeeks: 18,
+    historyPageSize: 20,
+    // HYPOTH�SE PRODUIT � modifiable : dur�e maximale d'une saisie manuelle ou d'une correction (12 h).
+    manualMaxMin: 720,
+  },
   notifications: { maxHabitReminders: 50 },
   profile: { maxNameLength: 24 },
   // Paramètres du générateur de données de démonstration (base séparée, mode démo uniquement).

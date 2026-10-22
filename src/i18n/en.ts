@@ -75,6 +75,12 @@ export function formatDayShort(date: string): string {
   return `${shortName(WEEKDAYS_LONG[weekday] ?? '')} ${d} ${shortName(MONTHS_LONG[month] ?? '')}`;
 }
 
+/** "October 2026". */
+export function formatMonthYear(date: string): string {
+  const { y, month } = dateParts(date);
+  return `${MONTHS_LONG[month] ?? ''} ${y}`;
+}
+
 export const en = {
   app: {
     name: 'Tatakae',
@@ -343,7 +349,6 @@ export const en = {
       rest: 'Rest',
       noGoal: '—',
       inProgressShort: 'now',
-      cellA11y: (day: string, state: string) => `${day}, ${state}`,
       stateScore: (score: number) => `${score} percent`,
       stateInProgress: (score: number) => `${score} percent, in progress`,
       stateFuture: 'no score yet',
@@ -413,10 +418,106 @@ export const en = {
   placeholder: {
     comingSoon: 'Coming in a later step.',
     home: 'Week calendar, current form, focus by category and the selected day’s quests will appear here.',
-    stats: (period: string) => `Statistics for the ${period} will appear here.`,
   },
   stats: {
-    period: { week: 'week', month: 'month' },
+    title: 'Statistics',
+    loading: 'Loading…',
+    periodTabs: { week: 'Week', month: 'Month' },
+    periodA11y: 'Period',
+    previous: 'Previous period',
+    next: 'Next period',
+    thisPeriod: { week: 'This week', month: 'This month' },
+    tiles: {
+      total: 'Total focus',
+      sessions: 'Sessions',
+      average: 'Average',
+      none: '—',
+      a11y: (label: string, value: string) => `${label}: ${value}`,
+    },
+    histogram: {
+      title: 'Per day',
+      empty: 'No focus recorded in this period.',
+      legend: 'Line = daily goal',
+      barA11y: (day: string, focus: string, goal: string | null) =>
+        goal === null ? `${day}: ${focus}` : `${day}: ${focus}, goal ${goal}`,
+      futureA11y: (day: string) => `${day}: not yet`,
+      restA11y: (day: string, focus: string) => `${day}: planned rest day, ${focus}`,
+    },
+    weekly: {
+      title: 'Weekly goal',
+      noGoal: 'No weekly goal set.',
+      of: (focus: string, goal: string) => `${focus} / ${goal}`,
+      percent: (value: number) => `${value}%`,
+      a11y: (range: string, focus: string, goal: string | null, percent: number | null) =>
+        goal === null ? `${range}: ${focus}, no goal` : `${range}: ${focus} of ${goal}, ${percent ?? 0} percent`,
+    },
+    categories: { title: 'By category', empty: 'No focus recorded in this period.' },
+    heatmap: {
+      title: 'Regularity',
+      subtitle: (weeks: number) => `Last ${weeks} weeks`,
+      a11y: (weeks: number, days: number, reached: number) =>
+        `Regularity over the last ${weeks} weeks: goal reached on ${reached} of ${days} scored days`,
+      low: (below: number) => `Under ${below}%`,
+      mid: (from: number, below: number) => `${from}–${below - 1}%`,
+      good: (from: number, below: number) => `${from}–${below - 1}%`,
+      full: 'Goal reached',
+      rest: 'Rest day',
+    },
+    last: {
+      title: 'Last session',
+      none: 'No session yet.',
+      when: (day: string, time: string) => `${day} · ${time}`,
+    },
+    history: {
+      open: 'History',
+      title: 'Session history',
+      empty: 'No session yet. Start one, or add a past session by hand.',
+      loadMore: 'Show more',
+      endsAt: (start: string, end: string) => `${start} – ${end}`,
+      rated: (rating: number) => `Rated ${rating}/5`,
+      archived: 'archived',
+      uncategorized: 'Uncategorized',
+      badges: {
+        manual: 'Manual entry',
+        corrected: 'Corrected',
+        stopwatch: 'Free timer',
+        stoppedEarly: 'Stopped early',
+      },
+      rowA11y: (day: string, duration: string, category: string, badges: string) =>
+        `${day}, ${duration}, ${category}${badges ? `, ${badges}` : ''}. Edit`,
+    },
+    add: 'Add a session',
+    form: {
+      newTitle: 'Add a session',
+      editTitle: 'Correct a session',
+      date: 'Date',
+      today: 'Today',
+      startTime: 'Start time (HH:MM)',
+      duration: 'Duration (minutes)',
+      category: 'Category',
+      noCategory: 'None',
+      quest: 'Quest (optional)',
+      noQuest: 'None',
+      save: 'Save session',
+      saveCorrection: 'Save correction',
+      xpDelta: (delta: number) => (delta === 0 ? 'XP unchanged' : `${delta > 0 ? '+' : ''}${delta} XP`),
+      originalNote: (day: string, time: string) => `Started ${day} at ${time}. The start time cannot be changed.`,
+      correctionNote:
+        'A corrected session is marked as “Corrected”, no longer counts for Mental, and its XP follows the new duration.',
+      overlapTitle: 'Overlaps another session',
+      overlapBody: 'This entry overlaps a session you already recorded. Save it anyway?',
+      overlapConfirm: 'Save anyway',
+      errors: {
+        invalid_time: 'Enter a time like 09:30.',
+        too_short: (minutes: number) => `A session lasts at least ${minutes} minute${minutes === 1 ? '' : 's'}.`,
+        too_long: (minutes: number) => `A session lasts at most ${minutes} minutes.`,
+        in_future: 'A session cannot end in the future.',
+        not_a_number: 'Enter the duration in minutes.',
+        not_found: 'This session no longer exists or is still running.',
+        overlap: 'This entry overlaps another session.',
+        failed: 'Something went wrong. Nothing was saved.',
+      },
+    },
   },
   common: {
     back: 'Back',

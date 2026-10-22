@@ -3,8 +3,8 @@
 Application mobile de **focus et d'habitudes** au thème RPG/anime bleu (Expo, React Native, TypeScript strict).
 Sans compte, hors ligne, données locales (SQLite). Interface en anglais, code en anglais.
 
-> Statut : étape 06 (timer Focus). Sessions fiables (compte à rebours / chronomètre libre, pause, fin, abandon),
-> récupération après fermeture de l'app, bilan de session, pause courte. Home / Stats restent provisoires.
+> Statut : étape 08 (Stats). Timer Focus fiable (compte à rebours / chronomètre libre, pause, fin, abandon), Accueil,
+> mode démo, Stats avec historique, saisie manuelle et correction. Le blocage des distractions n'existe pas encore.
 > Les fonctionnalités arrivent étape par étape (une branche / PR par étape, empilées).
 
 ## Documentation
@@ -79,6 +79,26 @@ Sans compte, hors ligne, données locales (SQLite). Interface en anglais, code e
     le futur), garde-fou « base réelle », réinitialisation complète (toutes les tables couvertes), reprise après une
     génération interrompue, refus pendant une session. **Vérifié à la main sur le web** : entrée / sortie du mode démo,
     régénération, base réelle inchangée au retour. **Non testé** : la bascule sur iOS / Android.
+- **Stats** (onglet Stats, paramètres d'URL `period` / `anchor`) : semaine ou mois avec navigation ; tuiles « Total focus »
+  / « Sessions » / « Average » (« 0 min », « 0 », « — » sans donnée) ; histogramme par jour avec trait d'objectif (jours
+  futurs vides, message si la période est vide) ; objectif hebdomadaire (barre + %, une ligne par semaine touchant le
+  mois) ; « By category » (catégories archivées conservées, « (archived) ») ; heatmap de régularité sur 18 semaines avec
+  légende textuelle, mêmes états et couleurs que le calendrier de l'Accueil ; dernière session et « History ».
+  Les totaux viennent de la même source que le bandeau et l'Accueil (segments par jour, session en cours incluse) ; le
+  nombre de sessions et la durée moyenne comptent les sessions terminées / arrêtées selon leur jour de début.
+  - **Saisie manuelle** (`/session/new`) : jour parmi les 7 derniers, heure de début `HH:MM`, durée, catégorie, quête
+    facultative. Jamais dans le futur, durée bornée (`PRODUCT.stats.manualMaxMin`) ; un chevauchement avec une autre
+    session est autorisé après avertissement. Badge « Manual entry » ; XP selon `PRODUCT.xp.manualEntriesEarnXp`.
+  - **Correction** (`/session/[id]/edit`) : durée (la fin bouge, le début reste) et catégorie. L'original est conservé
+    dans `session_corrections` (audit), les segments par jour sont recalculés, l'XP suit la nouvelle durée par une ligne
+    `session:<id>:r<n>` (delta, éventuellement négatif ; jamais de double récompense), la session est marquée
+    « Corrected » et n'entre plus dans « Mental ».
+  - **Testé** : périodes (semaine ISO, mois, ancrage), tuiles, histogramme, objectif hebdo, heatmap, badges, création
+    manuelle (segments, XP, `source='manual'`, futur / chevauchement refusés, lien avec une quête), correction 25 → 20 min
+    (XP −5, audit, révisions successives, no-op, refus atomique, re-découpage à minuit), cohérence bandeau / Stats pour
+    une même semaine, mois vide, session à cheval sur deux mois, catégorie archivée. **Vérifié à la main sur le web**
+    (390 px, mode démo) : écran Stats semaine / mois, correction, saisie avec avertissement de chevauchement. **Non
+    testé** : rendu des composants en test automatique, lecteurs d'écran, police agrandie, iOS / Android.
 - Rien de natif n'est testé (iOS/Android) : seule la version web a été exécutée.
 
 ## Lancer le projet

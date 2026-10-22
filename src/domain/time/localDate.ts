@@ -111,3 +111,9 @@ export function isFuture(date: LocalDate, today: LocalDate): boolean {
 export function minutesToMs(minutes: number): number {
   return minutes * MS_PER_MINUTE;
 }
+
+/** Local wall-clock instant of a calendar day (DST-safe: uses the local calendar, not 24 h steps). */
+export function localInstant(date: LocalDate, hour: number, minute: number): number {
+  const { y, m, d } = parseLocalDate(date);
+  return new Date(y, m - 1, d, hour, minute, 0, 0).getTime();
+}

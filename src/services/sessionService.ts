@@ -11,8 +11,14 @@ import {
   getRating,
   getSession,
   getTask,
+  applySessionCorrection,
+  countOverlappingSessions,
+  deleteDaySegments,
   insertActiveSession,
+  insertCorrectionAudit,
   insertDaySegments,
+  insertManualSession,
+  nextCorrectionRevision,
   insertPause,
   insertXpOnce,
   listPauses,
@@ -25,6 +31,7 @@ import {
 import { isUniqueConstraintError } from '../db/errors';
 import { appStateRepo } from '../db/repositories/keyValue';
 import type { SqlDb } from '../db/SqlDb';
+import { type EditError, type ManualEntryInput, planCorrection, planManualEntry, xpDelta } from '../domain/sessionEdit';
 import { deadline, endedAtForFocusedSec, reconcile, resolveFinish } from '../domain/timer/machine';
 import { splitIntervalsByLocalDay } from '../domain/time/splitByDay';
 import { toLocalDate } from '../domain/time/localDate';
@@ -371,4 +378,134 @@ export async function endBreak(db: SqlDb, clock: Clock): Promise<void> {
   await appStateRepo.remove(db, APP_STATE_KEYS.activeBreak);
   dataEvents.emit('sessions');
   await syncTimerNotifications(db, clock);
+}
+
+export interface ManualSessionInput extends ManualEntryInput {
+  categoryId: string | null;
+  taskId: string | null;
+  habitOccurrenceId: string | null;
+  /** The entry may overlap another session, but only once the user has been warned. */
+  allowOverlap: boolean;
+}
+
+export type ManualSessionResult =
+  | { ok: true; sessionId: string }
+  | { ok: false; error: EditError | 'overlap' };
+
+/**
+ * Manual entry (date, start, duration, category, quest): one finished `source = 'manual'` session.
+ * Never in the future; an overlap with another session is refused until `allowOverlap` is set.
+ * Earns XP like a timer session when `PRODUCT.xp.manualEntriesEarnXp`.
+ */
+export async function createManualSession(
+  db: SqlDb,
+  clock: Clock,
+  newId: IdGenerator,
+  input: ManualSessionInput,
+): Promise<ManualSessionResult> {
+  if (input.taskId && input.habitOccurrenceId) throw new Error('A session targets a task or a habit, not both');
+  const now = clock.now();
+  const plan = planManualEntry(input, now);
+  if (!plan.ok) return plan;
+
+  const id = newId();
+  const result = await db.transaction(async (tx): Promise<ManualSessionResult> => {
+    if (!input.allowOverlap && (await countOverlappingSessions(tx, plan.startedAt, plan.endedAt)) > 0) {
+      return { ok: false, error: 'overlap' };
+    }
+    await insertManualSession(
+      tx,
+      {
+        id,
+        startedAt: plan.startedAt,
+        endedAt: plan.endedAt,
+        focusedSec: plan.focusedSec,
+        categoryId: input.categoryId,
+        taskId: input.taskId,
+        habitOccurrenceId: input.habitOccurrenceId,
+      },
+      now,
+    );
+    await insertDaySegments(tx, id, plan.segments);
+    const xp = PRODUCT.xp.manualEntriesEarnXp ? xpForFocusedSec(plan.focusedSec) : 0;
+    if (xp > 0) {
+      await insertXpOnce(
+        tx,
+        { id: newId(), sourceKey: `session:${id}:r0`, sessionId: id, amount: xp, ruleVersion: PRODUCT.xp.ruleVersion },
+        now,
+      );
+    }
+    return { ok: true, sessionId: id };
+  });
+  if (result.ok) dataEvents.emit('sessions', 'xp');
+  return result;
+}
+
+export interface CorrectionInput {
+  focusedSec: number;
+  categoryId: string | null;
+}
+
+export type CorrectionResult =
+  | { ok: true; changed: boolean; xpDelta: number }
+  | { ok: false; error: EditError | 'not_found' };
+
+/**
+ * Corrects the duration and/or the category of a finished session, atomically: audit row
+ * (`session_corrections`, revision + 1, before/after), `is_corrected = 1` (the session leaves the
+ * Mental axis), day segments recomputed, and an XP adjustment `session:<id>:r<revision>` so that
+ * the session's total XP equals the XP of its new duration.
+ */
+export async function correctSession(
+  db: SqlDb,
+  clock: Clock,
+  newId: IdGenerator,
+  sessionId: string,
+  input: CorrectionInput,
+): Promise<CorrectionResult> {
+  const now = clock.now();
+  const result = await db.transaction(async (tx): Promise<CorrectionResult> => {
+    const session = await getSession(tx, sessionId);
+    if (!session || (session.status !== 'completed' && session.status !== 'stopped')) {
+      return { ok: false, error: 'not_found' };
+    }
+    const unchanged = session.focusedSec === input.focusedSec && session.categoryId === input.categoryId;
+    if (unchanged) return { ok: true, changed: false, xpDelta: 0 };
+
+    const plan = planCorrection(session.startedAt, input.focusedSec, now);
+    if (!plan.ok) return plan;
+
+    const revision = await nextCorrectionRevision(tx, sessionId);
+    await insertCorrectionAudit(
+      tx,
+      {
+        id: newId(),
+        sessionId,
+        revision,
+        before: { focusedSec: session.focusedSec, endedAt: session.endedAt, categoryId: session.categoryId },
+        after: { focusedSec: plan.focusedSec, endedAt: plan.endedAt, categoryId: input.categoryId },
+      },
+      now,
+    );
+    await applySessionCorrection(
+      tx,
+      sessionId,
+      { endedAt: plan.endedAt, focusedSec: plan.focusedSec, categoryId: input.categoryId },
+      now,
+    );
+    await deleteDaySegments(tx, sessionId);
+    await insertDaySegments(tx, sessionId, plan.segments);
+
+    const delta = xpDelta(await xpForSession(tx, sessionId), plan.focusedSec);
+    if (delta !== 0) {
+      await insertXpOnce(
+        tx,
+        { id: newId(), sourceKey: `session:${sessionId}:r${revision}`, sessionId, amount: delta, ruleVersion: PRODUCT.xp.ruleVersion },
+        now,
+      );
+    }
+    return { ok: true, changed: true, xpDelta: delta };
+  });
+  if (result.ok && result.changed) dataEvents.emit('sessions', 'xp');
+  return result;
 }

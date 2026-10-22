@@ -1,8 +1,10 @@
 import { PRODUCT } from '../config/product';
 import { maskFromWeekdays, maskHasWeekday } from './habits';
 import { chance, createRng, pick, randFloat, randInt, type Rng } from './random';
-import { addDays, isoWeekday, parseLocalDate } from './time/localDate';
+import { addDays, isoWeekday, localInstant } from './time/localDate';
 import type { IsoWeekday, LocalDate, StopReason } from './types';
+
+export { localInstant };
 
 const MS_PER_MIN = 60_000;
 const STOP_REASONS = ['interrupted', 'tired', 'quest_done', 'other'] as const satisfies readonly StopReason[];
@@ -87,12 +89,6 @@ const TASK_DEFINITIONS = [
   dueIn: number | null;
   doneAgo: number | null;
 }[];
-
-/** Local wall-clock instant of a calendar day (DST-safe: uses the local calendar, not 24 h steps). */
-export function localInstant(date: LocalDate, hour: number, minute: number): number {
-  const { y, m, d } = parseLocalDate(date);
-  return new Date(y, m - 1, d, hour, minute, 0, 0).getTime();
-}
 
 function defaultGoals(): Record<IsoWeekday, number | null> {
   const out = {} as Record<IsoWeekday, number | null>;
