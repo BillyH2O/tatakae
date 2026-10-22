@@ -235,6 +235,10 @@ export const en = {
       end: 'End break',
     },
   },
+  home: {
+    startSession: 'Start a session',
+    resumeSession: 'Resume session',
+  },
   placeholder: {
     comingSoon: 'Coming in a later step.',
     home: 'Week calendar, current form, focus by category and the selected day’s quests will appear here.',
