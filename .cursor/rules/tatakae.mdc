@@ -8,7 +8,7 @@ alwaysApply: true
 Contexte : `AGENTS.md`, `docs/PRODUCT_SPEC.md` (référence produit), `docs/ARCHITECTURE.md` (décisions techniques).
 
 - TypeScript strict (`noUncheckedIndexedAccess`). Pas de `any` implicite ; pas d'import profond de `react-native/Libraries/*`.
-- Interface en français (chaînes dans `src/i18n/fr.ts`), code, types, noms SQL en anglais.
+- Interface en anglais (chaînes dans `src/i18n/en.ts`), code, types, noms SQL en anglais.
 - Calculs métier (scores, radar, totaux, répartition minuit/DST, XP, niveaux, machine du timer) : fonctions pures dans `src/domain/`, sans import React/Expo/DB, **toujours accompagnées de tests** (`npm test`). Tests en fuseau `Europe/Paris` (`src/test/globalSetup.js`).
 - Hypothèses produit centralisées dans `src/config/product.ts`, commentées « HYPOTHÈSE PRODUIT ». Aucun nombre produit en dur ailleurs.
 - Jours = `LocalDate` (`YYYY-MM-DD`, fuseau local), instants = epoch ms. Jamais `+ 86_400_000` pour changer de jour : `addDays`.

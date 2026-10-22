@@ -1,5 +1,6 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { colors, space, type, veil } from '../theme/tokens';
 import { ScreenBackground } from './ScreenBackground';
 
 interface Props {
@@ -12,9 +13,9 @@ interface Props {
 export function FullScreenMessage({ title, body, detail, busy }: Props) {
   return (
     <View style={styles.root}>
-      <ScreenBackground veil={0.6} />
+      <ScreenBackground veil={veil.focus} />
       <ScrollView contentContainerStyle={styles.content}>
-        {busy ? <ActivityIndicator color="#4C9BFF" size="large" /> : null}
+        {busy ? <ActivityIndicator color={colors.actionBright} size="large" /> : null}
         <Text style={styles.title} accessibilityRole="header">
           {title}
         </Text>
@@ -26,9 +27,9 @@ export function FullScreenMessage({ title, body, detail, busy }: Props) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#05070D' },
-  content: { flexGrow: 1, justifyContent: 'center', padding: 24, gap: 12 },
-  title: { color: '#F4F7FF', fontSize: 20, fontWeight: '700' },
-  body: { color: '#A3B3CF', fontSize: 15, lineHeight: 20 },
-  detail: { color: '#6F7F9E', fontSize: 12, fontFamily: 'monospace' },
+  root: { flex: 1, backgroundColor: colors.bg },
+  content: { flexGrow: 1, justifyContent: 'center', padding: space.xl, gap: space.md },
+  title: { ...type.title, fontSize: 20, color: colors.text },
+  body: { ...type.body, color: colors.textMuted },
+  detail: { ...type.caption, color: colors.textFaint, fontFamily: 'monospace' },
 });

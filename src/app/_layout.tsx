@@ -1,9 +1,11 @@
-import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, Stack, ThemeProvider, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { DbProvider } from '../db/DbProvider';
+import { AppHeader } from '../ui/components/AppHeader';
 import { ScreenBackground } from '../ui/components/ScreenBackground';
+import { colors, veilForPath } from '../ui/theme/tokens';
 
 // Navigation containers paint their own background; make it transparent so the landscape shows through.
 const NAV_THEME = {
@@ -11,18 +13,30 @@ const NAV_THEME = {
   colors: { ...DarkTheme.colors, background: 'transparent', card: 'transparent' },
 };
 
+/** Reads the route on its own so navigation never re-renders the database provider. */
+function RouteBackground() {
+  return <ScreenBackground veil={veilForPath(usePathname())} />;
+}
+
 export default function RootLayout() {
   return (
-    <View style={{ flex: 1, backgroundColor: '#05070D' }}>
+    <View style={styles.root}>
       <StatusBar style="light" />
-      <ScreenBackground veil={0.45} />
+      <RouteBackground />
       <ThemeProvider value={NAV_THEME}>
         <DbProvider>
-          <Stack
-            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}
-          />
+          <AppHeader />
+          <View style={styles.body}>
+            <Stack screenOptions={{ headerShown: false, contentStyle: styles.transparent }} />
+          </View>
         </DbProvider>
       </ThemeProvider>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg },
+  body: { flex: 1 },
+  transparent: { backgroundColor: 'transparent' },
+});

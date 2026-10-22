@@ -1,10 +1,10 @@
 # Tatakae
 
 Application mobile de **focus et d'habitudes** au thème RPG/anime bleu (Expo, React Native, TypeScript strict).
-Sans compte, hors ligne, données locales (SQLite). Interface en français, code en anglais.
+Sans compte, hors ligne, données locales (SQLite). Interface en anglais, code en anglais.
 
-> Statut : étape 02 (données et domaine). Pas encore d'écran fonctionnel : l'app s'ouvre sur un écran provisoire
-> qui prouve que la base SQLite locale est créée et migrée (« Base locale prête · schéma v1 »).
+> Statut : étape 03 (shell et bandeau). Navigation à 4 onglets (Home, Quests, Stats, Profile) sur le paysage,
+> bandeau permanent branché sur SQLite ; le contenu des onglets est provisoire. Pas encore d'onboarding ni de réglages.
 > Les fonctionnalités arrivent étape par étape (une branche / PR par étape, empilées).
 
 ## Documentation
@@ -18,7 +18,11 @@ Sans compte, hors ligne, données locales (SQLite). Interface en français, code
 
 - Base SQLite (`tatakae.db`) : schéma v1 complet, migrations versionnées (`PRAGMA user_version`), transactions atomiques sérialisées.
 - Domaine pur testé : dates locales (semaine ISO, DST), répartition des sessions à cheval sur minuit, objectifs datés, XP et niveaux.
-- Repositories : profil, catégories, objectifs, XP (anti double récompense), réglages.
+- Repositories : profil, catégories, objectifs, XP (anti double récompense), réglages, focus par jour.
+- Thème bleu (`src/ui/theme/tokens.ts`), paysage partagé assombri selon l'écran, barre d'onglets maison.
+- Bandeau permanent (~93 pt hors safe area sur web) : avatar (emblème original par défaut) → Profile, pseudo, niveau,
+  cristaux (solde réel, 0 ; aucune règle ni boutique), « Today » et « Week » (focus / objectif, barre si objectif) → Stats.
+  Sans profil (avant l'onboarding de l'étape suivante) : « Adventurer », niveau 1, focus sans objectif.
 - Rien de natif n'est testé (iOS/Android) : seule la version web a été exécutée.
 
 ## Lancer le projet

@@ -6,7 +6,7 @@ Application mobile Expo (SDK 58, React Native, TypeScript strict) de focus et d'
 
 ## Règles non négociables
 
-- UI en **français**, code/types/SQL en **anglais**. Toutes les chaînes UI dans `src/i18n/fr.ts`.
+- UI en **anglais** (décision du propriétaire, prime sur la spec), code/types/SQL en **anglais**. Toutes les chaînes UI dans `src/i18n/en.ts`.
 - **Hypothèses produit** (XP, seuils, durées, objectifs par défaut…) uniquement dans `src/config/product.ts`.
 - **Logique métier = fonctions pures** dans `src/domain/` (aucun import RN/Expo/DB), avec tests unitaires. Pas de `Date.now()` direct : `Clock` injecté.
 - Une seule source pour les totaux (header, Accueil, Stats). Pas de SQL dans `src/app/` ni `src/ui/`.

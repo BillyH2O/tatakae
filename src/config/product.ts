@@ -65,9 +65,9 @@ export const PRODUCT = {
     homeTopN: 3,
     // HYPOTHÈSE PRODUIT — modifiable : catégories proposées à l'onboarding (la clé d'icône est MaterialCommunityIcons).
     seed: [
-      { name: 'Études', icon: 'school' },
-      { name: 'Projet', icon: 'hammer-wrench' },
-      { name: 'Lecture', icon: 'book-open-variant' },
+      { name: 'Studies', icon: 'school' },
+      { name: 'Project', icon: 'hammer-wrench' },
+      { name: 'Reading', icon: 'book-open-variant' },
       { name: 'Sport', icon: 'run' },
     ],
   },
