@@ -1,11 +1,8 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { CategoryBar } from '../../domain/totals';
 import { en, formatDuration } from '../../i18n/en';
-import { colors, radius, space, touch, type } from '../theme/tokens';
-
-const UNCATEGORIZED_ICON = 'shape-outline';
+import { colors, space, type } from '../theme/tokens';
 
 function nameOf(bar: CategoryBar): string {
   if (!bar.category) return en.home.categories.uncategorized;
@@ -14,12 +11,11 @@ function nameOf(bar: CategoryBar): string {
     : `${bar.category.name} (${en.home.categories.archived})`;
 }
 
-/** Horizontal bars on a common scale (the biggest category of the day is full), icon + name + duration. */
+/** Name and duration on one line, one blue bar below on a common scale (the biggest category is full). */
 export function CategoryBars({ bars }: { bars: readonly CategoryBar[] }) {
   return (
     <View style={styles.list}>
       {bars.map((bar) => {
-        const color = bar.category?.color ?? colors.score.neutral;
         const duration = formatDuration(bar.focusedSec);
         return (
           <View
@@ -28,21 +24,14 @@ export function CategoryBars({ bars }: { bars: readonly CategoryBar[] }) {
             accessible
             accessibilityLabel={en.home.categories.rowA11y(nameOf(bar), duration)}
           >
-            <MaterialCommunityIcons
-              name={(bar.category?.icon ?? UNCATEGORIZED_ICON) as keyof typeof MaterialCommunityIcons.glyphMap}
-              size={20}
-              color={color}
-            />
-            <View style={styles.main}>
-              <View style={styles.line}>
-                <Text style={styles.name} numberOfLines={1}>
-                  {nameOf(bar)}
-                </Text>
-                <Text style={styles.duration}>{duration}</Text>
-              </View>
-              <View style={styles.track}>
-                <View style={[styles.fill, { width: `${Math.max(2, bar.ratio * 100)}%`, backgroundColor: color }]} />
-              </View>
+            <View style={styles.line}>
+              <Text style={styles.name} numberOfLines={1}>
+                {nameOf(bar)}
+              </Text>
+              <Text style={styles.duration}>{duration}</Text>
+            </View>
+            <View style={styles.track}>
+              <View style={[styles.fill, { width: `${Math.max(3, bar.ratio * 100)}%` }]} />
             </View>
           </View>
         );
@@ -52,12 +41,11 @@ export function CategoryBars({ bars }: { bars: readonly CategoryBar[] }) {
 }
 
 const styles = StyleSheet.create({
-  list: { gap: space.sm },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: touch.min - space.sm },
-  main: { flex: 1, gap: 4 },
+  list: { gap: space.md },
+  row: { gap: 6 },
   line: { flexDirection: 'row', justifyContent: 'space-between', gap: space.sm },
   name: { ...type.label, color: colors.text, flexShrink: 1 },
-  duration: { ...type.caption, color: colors.textMuted, fontVariant: ['tabular-nums'] },
-  track: { height: 6, borderRadius: radius.sm, backgroundColor: colors.actionMuted, overflow: 'hidden' },
-  fill: { height: '100%', borderRadius: radius.sm },
+  duration: { ...type.label, color: colors.text, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  track: { height: 8, borderRadius: 4, backgroundColor: 'rgba(47,123,255,0.22)', overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 4, backgroundColor: colors.bar },
 });

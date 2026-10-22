@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { border, colors, radius, space, type } from '../theme/tokens';
+import { border, colors, glow, radius, space, touch, type } from '../theme/tokens';
 
 interface Option<T extends string> {
   value: T;
@@ -44,26 +44,24 @@ export function SegmentedControl<T extends string>({
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    borderWidth: border.hairline,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    overflow: 'hidden',
-  },
+  row: { flexDirection: 'row', gap: space.xs },
   segment: {
     flex: 1,
     paddingVertical: space.sm,
     paddingHorizontal: space.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 40,
+    minHeight: touch.min,
+    borderWidth: border.thin,
+    borderColor: colors.cellBorder,
+    backgroundColor: colors.cell,
+    borderRadius: radius.md,
   },
   segmentSelected: {
     backgroundColor: colors.actionMuted,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.actionBright,
+    borderColor: colors.borderStrong,
+    boxShadow: glow,
   },
-  label: { ...type.caption, color: colors.textMuted, fontWeight: '500' },
-  labelSelected: { color: colors.actionBright },
+  label: { ...type.label, color: colors.textMuted },
+  labelSelected: { color: colors.text, fontWeight: '700' },
 });

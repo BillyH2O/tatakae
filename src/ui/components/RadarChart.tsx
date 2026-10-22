@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, G, Line, Polygon, Text as SvgText } from 'react-native-svg';
 
 import type { RadarAxisId, RadarAxisResult } from '../../domain/radar';
@@ -12,6 +12,8 @@ const RADIUS = 64;
 const LABEL_RADIUS = RADIUS + 22;
 const RINGS = [1 / 3, 2 / 3, 1] as const;
 const HIT_SIZE = 44;
+/** SVG text does not inherit the app font on web (it falls back to a serif). */
+const FONT_FAMILY = Platform.OS === 'web' ? 'system-ui, -apple-system, Segoe UI, sans-serif' : undefined;
 
 // Fixed layout: Strength top, Endurance right, Mental bottom, Consistency left.
 const ANGLES: Record<RadarAxisId, number> = {
@@ -51,13 +53,13 @@ export function RadarChart({ axes, selected, onSelect }: Props) {
     <View style={styles.box} accessibilityLabel={en.home.form.chartA11y}>
       <Svg width="100%" height="100%" viewBox={`0 0 ${VIEW} ${VIEW}`}>
         {RINGS.map((ring) => (
-          <Circle key={ring} cx={CENTER} cy={CENTER} r={RADIUS * ring} fill="none" stroke={colors.divider} strokeWidth={1} />
+          <Circle key={ring} cx={CENTER} cy={CENTER} r={RADIUS * ring} fill="none" stroke={colors.cellBorder} strokeWidth={1} />
         ))}
         {axes.map((axis) => {
           const end = point(axis.axis, RADIUS);
           return <Line key={axis.axis} x1={CENTER} y1={CENTER} x2={end.x} y2={end.y} stroke={colors.border} strokeWidth={1} />;
         })}
-        {polygon ? <Polygon points={polygon} fill={colors.actionMuted} stroke={colors.action} strokeWidth={2} /> : null}
+        {polygon ? <Polygon points={polygon} fill="rgba(47,140,255,0.38)" stroke={colors.barBright} strokeWidth={2} /> : null}
         {axes.map((axis) => {
           const label = point(axis.axis, LABEL_RADIUS);
           const vertex = vertices.find((candidate) => candidate.axis === axis.axis);
@@ -68,6 +70,7 @@ export function RadarChart({ axes, selected, onSelect }: Props) {
                 x={label.x}
                 y={label.y + 4}
                 fontSize={12}
+                fontFamily={FONT_FAMILY}
                 fontWeight={isSelected ? '700' : '500'}
                 textAnchor="middle"
                 fill={isSelected ? colors.actionBright : colors.textMuted}

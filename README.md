@@ -124,9 +124,17 @@ npm run check      # les trois ci-dessus
 
 ## Stack
 
-Expo SDK 58, React Native 0.88, Expo Router (`src/app/`), expo-sqlite, react-native-svg, jest-expo.
+Expo SDK 58, React Native 0.88, Expo Router (`src/app/`), expo-sqlite, react-native-svg, react-native-gifted-charts
+(histogramme des Stats ; `expo-linear-gradient` pour le dégradé des barres), jest-expo.
 
 ## Visuel
+
+Langage visuel (d'après les maquettes de référence) : une carte sombre translucide au contour bleu clair et à la
+lueur douce (`Panel`, `colors.border`, `glow`), des cellules internes discrètes (`Panel variant="cell"`) et un bandeau
+et une barre d'onglets en cartes flottantes. Un seul bleu pour les barres et les remplissages, du cyan pour les gros
+chiffres ; les couleurs de score (orange / jaune / vert) ne servent qu'aux scores des jours. Tokens dans
+`src/ui/theme/tokens.ts`. Stats : histogramme à barres bleues avec valeurs, axe en heures et score sous chaque jour
+(semaine), heatmap en une teinte bleue (légende « Less … More »). Vérifié sur le web uniquement.
 
 Le fond paysage (`assets/images/landscape.jpg`) est une illustration anime originale générée par IA
 pour ce projet (aucune franchise, aucun personnage, pas de pixel art).

@@ -8,12 +8,12 @@ import { useDatabaseMode } from '../../hooks/useDatabaseMode';
 import { useHeaderData } from '../../hooks/useHeaderData';
 import { useToday } from '../../hooks/useToday';
 import { en, formatDuration } from '../../i18n/en';
-import { border, colors, headerMaxFontScale, panel, radius, space, touch, type } from '../theme/tokens';
+import { border, colors, glow, headerMaxFontScale, panel, radius, space, touch, type } from '../theme/tokens';
 import { Avatar } from './Avatar';
 import { ProgressBar } from './ProgressBar';
 
 const AVATAR_SIZE = 40;
-const HEADER_ALPHA = 0.82;
+const HEADER_ALPHA = 0.86;
 
 function focusLabel({ focusSec, goalMin }: FocusVsGoal): string {
   const focus = formatDuration(focusSec);
@@ -60,7 +60,7 @@ export function AppHeader() {
   const crystals = data?.crystals;
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + space.sm }]}>
+    <View style={[styles.root, { marginTop: insets.top + space.sm }]}>
       <View style={styles.identity}>
         <Pressable
           onPress={() => router.push('/profile')}
@@ -114,16 +114,20 @@ export function AppHeader() {
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: space.lg,
-    paddingBottom: space.sm,
+    marginHorizontal: space.md,
+    marginBottom: space.sm,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
     gap: space.sm,
     backgroundColor: panel(HEADER_ALPHA),
-    borderBottomWidth: border.hairline,
-    borderBottomColor: colors.border,
+    borderWidth: border.thin,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    boxShadow: glow,
   },
   identity: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   name: { ...type.h2, color: colors.text, flex: 1, minWidth: 0 },
-  level: { ...type.label, color: colors.actionBright, fontVariant: ['tabular-nums'] },
+  level: { ...type.label, color: colors.textMuted, fontVariant: ['tabular-nums'] },
   crystals: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   crystalValue: { ...type.label, color: colors.text, fontVariant: ['tabular-nums'] },
   totals: { flexDirection: 'row', alignItems: 'stretch', gap: space.md },

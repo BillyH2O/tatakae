@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import { border, colors, radius, space, touch, type } from '../theme/tokens';
+import { border, colors, glow, radius, space, touch, type } from '../theme/tokens';
 
 interface Props {
   label: string;
@@ -53,15 +53,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primary: { backgroundColor: colors.action },
+  primary: { backgroundColor: colors.action, boxShadow: glow },
   primaryPressed: { backgroundColor: colors.actionPressed },
   ghost: {
-    backgroundColor: 'transparent',
+    backgroundColor: colors.cell,
     borderWidth: border.thin,
-    borderColor: colors.borderStrong,
+    borderColor: colors.border,
   },
   disabled: { opacity: 0.5 },
-  label: { ...type.label, fontWeight: '600' },
+  label: { ...type.body, fontWeight: '600' },
   labelPrimary: { color: colors.text },
-  labelGhost: { color: colors.actionBright },
+  labelGhost: { color: colors.text },
 });

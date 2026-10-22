@@ -12,6 +12,15 @@ export function formatDuration(totalSec: number): string {
   return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, '0')}`;
 }
 
+/** Tight duration for chart labels: "35m", "1h40", "2h". */
+export function formatDurationCompact(totalSec: number): string {
+  const minutes = Math.floor(Math.max(0, totalSec) / SEC_PER_MINUTE);
+  if (minutes < MIN_PER_HOUR) return `${minutes}m`;
+  const hours = Math.floor(minutes / MIN_PER_HOUR);
+  const rest = minutes % MIN_PER_HOUR;
+  return rest === 0 ? `${hours}h` : `${hours}h${String(rest).padStart(2, '0')}`;
+}
+
 /** Timer face: "04:05" or "1:02:03". */
 export function formatClock(totalSec: number): string {
   const total = Math.max(0, Math.floor(totalSec));
@@ -430,14 +439,13 @@ export const en = {
     tiles: {
       total: 'Total focus',
       sessions: 'Sessions',
-      average: 'Average',
+      average: 'Average duration',
       none: '—',
       a11y: (label: string, value: string) => `${label}: ${value}`,
     },
     histogram: {
       title: 'Per day',
       empty: 'No focus recorded in this period.',
-      legend: 'Line = daily goal',
       barA11y: (day: string, focus: string, goal: string | null) =>
         goal === null ? `${day}: ${focus}` : `${day}: ${focus}, goal ${goal}`,
       futureA11y: (day: string) => `${day}: not yet`,
@@ -457,11 +465,8 @@ export const en = {
       subtitle: (weeks: number) => `Last ${weeks} weeks`,
       a11y: (weeks: number, days: number, reached: number) =>
         `Regularity over the last ${weeks} weeks: goal reached on ${reached} of ${days} scored days`,
-      low: (below: number) => `Under ${below}%`,
-      mid: (from: number, below: number) => `${from}–${below - 1}%`,
-      good: (from: number, below: number) => `${from}–${below - 1}%`,
-      full: 'Goal reached',
-      rest: 'Rest day',
+      less: 'Less',
+      more: 'More',
     },
     last: {
       title: 'Last session',

@@ -5,9 +5,18 @@ export const colors = {
   bg: '#05070D',
   night: '#0A1224',
   nightRaised: '#0F1A33',
-  border: 'rgba(120,160,255,0.18)',
-  borderStrong: 'rgba(76,155,255,0.55)',
+  /** Outline of a card over the landscape (the mockups: thin, light blue, softly glowing). */
+  border: 'rgba(86,160,255,0.42)',
+  borderStrong: 'rgba(96,180,255,0.9)',
+  /** Inner cell inside a card: barely lighter than the card, hairline outline. */
+  cell: 'rgba(24,52,104,0.42)',
+  cellBorder: 'rgba(86,160,255,0.26)',
   divider: 'rgba(160,180,220,0.10)',
+  /** Big figures (KPIs, scores): the only second hue besides blue. */
+  cyan: '#55D4FF',
+  /** Bars of a chart: one blue, a brighter one for today. */
+  bar: '#2F8CFF',
+  barBright: '#4CC4FF',
   action: '#2F7BFF',
   actionBright: '#4C9BFF',
   actionPressed: '#1F5FD6',
@@ -22,15 +31,18 @@ export const colors = {
   category: ['#4C9BFF', '#7C6CFF', '#38C6D9', '#E2B144', '#E57AA8', '#8BDB9A', '#F28C5B', '#A3B3CF'],
 } as const;
 
-/** Panel fill over the landscape: Home/Profile 0.90, Quests 0.96, Stats charts 1. */
-export const panelAlpha = { home: 0.9, profile: 0.9, quests: 0.96, solid: 1 } as const;
+/** Panel fill over the landscape: translucent enough to let the scenery through, dark enough to read. */
+export const panelAlpha = { home: 0.84, profile: 0.84, quests: 0.88, solid: 0.9 } as const;
+
+/** Soft blue halo around cards, as on the mockups. */
+export const glow = '0 0 14px rgba(60,140,255,0.28)';
 
 export function panel(alpha: number): string {
   return `rgba(10,18,36,${alpha})`;
 }
 
 /** Veil darkening the shared landscape, per screen. */
-export const veil = { home: 0.35, profile: 0.35, quests: 0.45, stats: 0.5, focus: 0.65, fallback: 0.45 } as const;
+export const veil = { home: 0.35, profile: 0.35, quests: 0.45, stats: 0.35, focus: 0.65, fallback: 0.45 } as const;
 
 export function veilForPath(pathname: string): number {
   if (pathname === '/' || pathname === '') return veil.home;
@@ -41,7 +53,7 @@ export function veilForPath(pathname: string): number {
   return veil.fallback;
 }
 
-export const radius = { sm: 4, md: 6, lg: 8 } as const;
+export const radius = { sm: 4, md: 10, lg: 16 } as const;
 export const border = { hairline: StyleSheet.hairlineWidth, thin: 1 } as const;
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
 export const touch = { min: 44 } as const;
