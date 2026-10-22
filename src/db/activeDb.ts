@@ -1,11 +1,11 @@
 import { Platform } from 'react-native';
 import Storage from 'expo-sqlite/kv-store';
 
-export const REAL_DB_NAME = 'tatakae.db';
-export const DEMO_DB_NAME = 'tatakae-demo.db';
+import { DEMO_DB_NAME, type DbName, REAL_DB_NAME } from '../config/databaseNames';
+
+export { DEMO_DB_NAME, REAL_DB_NAME };
 const ACTIVE_DB_KEY = 'tatakae.activeDb';
 
-type DbName = typeof REAL_DB_NAME | typeof DEMO_DB_NAME;
 
 // expo-sqlite's synchronous kv-store needs SharedArrayBuffer on web (cross-origin isolation),
 // which the dev server does not provide; localStorage is the web equivalent.

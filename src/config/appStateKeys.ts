@@ -6,6 +6,8 @@ export const APP_STATE_KEYS = {
   activeBreak: 'activeBreak',
   /** True once the system permission prompt has been shown (it is only asked in context, once). */
   notificationPermissionAsked: 'notificationPermissionAsked',
+  /** Set at the end of the demo seeding (only ever written in the demo database). */
+  demoSeededAt: 'demoSeededAt',
 } as const;
 
 /** Keys of the single scheduled notifications (`scheduled_notifications.key`). */

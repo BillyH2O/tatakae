@@ -69,8 +69,12 @@ export interface CategoryBar {
  */
 export function categoryBars(rows: readonly CategoryFocus[], categories: readonly Category[]): CategoryBar[] {
   const totals = new Map<string | null, number>();
+  // A category id missing from categories (stale read during a data change) counts as uncategorized,
+  // so the result never holds two uncategorized entries or an entry without a category.
+  const known = new Set(categories.map((category) => category.id));
   for (const row of rows) {
-    if (row.focusedSec > 0) totals.set(row.categoryId, (totals.get(row.categoryId) ?? 0) + row.focusedSec);
+    const id = row.categoryId !== null && known.has(row.categoryId) ? row.categoryId : null;
+    if (row.focusedSec > 0) totals.set(id, (totals.get(id) ?? 0) + row.focusedSec);
   }
   const max = Math.max(0, ...totals.values());
   const sortOrder = (id: string | null) =>

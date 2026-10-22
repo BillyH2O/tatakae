@@ -146,3 +146,55 @@ export async function getRating(db: SqlDb, sessionId: string): Promise<number | 
   const row = await db.get<{ rating: number }>('SELECT rating FROM focus_ratings WHERE session_id = ?', [sessionId]);
   return row?.rating ?? null;
 }
+
+export interface NewFinishedSession {
+  id: string;
+  mode: SessionMode;
+  status: 'completed' | 'stopped';
+  plannedSec: number | null;
+  startedAt: number;
+  endedAt: number;
+  focusedSec: number;
+  stopReason: StopReason | null;
+  categoryId: string | null;
+  taskId: string | null;
+  habitOccurrenceId: string | null;
+}
+
+/** Inserts an already finalized timer session (demo data only; real sessions go through `finishSession`). */
+export async function insertFinishedSession(db: SqlDb, input: NewFinishedSession): Promise<void> {
+  await db.run(
+    `INSERT INTO sessions (id, source, mode, status, planned_sec, started_at, ended_at, last_seen_at, focused_sec,
+       stop_reason, category_id, task_id, habit_occurrence_id, finalized_at, created_at, updated_at)
+     VALUES (?, 'timer', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      input.id,
+      input.mode,
+      input.status,
+      input.plannedSec,
+      input.startedAt,
+      input.endedAt,
+      input.endedAt,
+      input.focusedSec,
+      input.stopReason,
+      input.categoryId,
+      input.taskId,
+      input.habitOccurrenceId,
+      input.endedAt,
+      input.startedAt,
+      input.endedAt,
+    ],
+  );
+}
+
+export async function insertClosedPause(
+  db: SqlDb,
+  input: { id: string; sessionId: string; startedAt: number; endedAt: number },
+): Promise<void> {
+  await db.run('INSERT INTO session_pauses (id, session_id, started_at, ended_at) VALUES (?, ?, ?, ?)', [
+    input.id,
+    input.sessionId,
+    input.startedAt,
+    input.endedAt,
+  ]);
+}

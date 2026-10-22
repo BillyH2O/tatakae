@@ -175,6 +175,19 @@ describe('categoryBars / liveFocusOnDate', () => {
     expect(categoryBars([], categories)).toEqual([]);
   });
 
+  it('counts an unknown category (stale read) as uncategorized, without a duplicate entry', () => {
+    const bars = categoryBars(
+      [
+        { categoryId: 'gone-1', focusedSec: 600 },
+        { categoryId: null, focusedSec: 300 },
+        { categoryId: 'gone-2', focusedSec: 60 },
+      ],
+      categories,
+    );
+    expect(bars).toHaveLength(1);
+    expect(bars[0]).toMatchObject({ category: null, focusedSec: 960 });
+  });
+
   it('liveFocusOnDate gives the part of the running session on that day', () => {
     const start = new Date(2026, 9, 22, 23, 50).getTime();
     const live = {

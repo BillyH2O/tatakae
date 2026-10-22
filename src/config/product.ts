@@ -106,6 +106,30 @@ export const PRODUCT = {
   stats: { heatmapWeeks: 18, historyPageSize: 20 },
   notifications: { maxHabitReminders: 50 },
   profile: { maxNameLength: 24 },
+  // Paramètres du générateur de données de démonstration (base séparée, mode démo uniquement).
+  demo: {
+    displayName: 'Demo',
+    // Historique généré : de (aujourd'hui − historyDays) à aujourd'hui.
+    historyDays: 70,
+    // Probabilité qu'un jour avec objectif n'ait aucune session.
+    skipDayChance: 0.15,
+    // Probabilité d'une courte session un jour de repos.
+    restDayActiveChance: 0.12,
+    // Volume du jour = objectif × un facteur tiré dans cet intervalle (peut dépasser 100 %).
+    volumeFactor: { min: 0.3, max: 1.3 },
+    // Fenêtre horaire des sessions (heures locales) et pause entre deux sessions (minutes).
+    dayStartHour: 8,
+    dayEndHour: 22,
+    gapMin: { min: 5, max: 25 },
+    stopwatchChance: 0.2,
+    earlyStopChance: 0.25,
+    pauseChance: 0.25,
+    ratedChance: 0.65,
+    uncategorizedChance: 0.15,
+    habitDoneChance: 0.7,
+    // Jours avant aujourd'hui où une session franchit minuit (23:35, 45 min).
+    midnightSessionDaysAgo: 10,
+  },
 } as const;
 
 export type ProductConfig = typeof PRODUCT;

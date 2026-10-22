@@ -67,6 +67,18 @@ Sans compte, hors ligne, données locales (SQLite). Interface en anglais, code e
     **Vérifié à la main sur la version web** : rendu à 360 px (empilé) et sélection d'un jour. **Non testé** : rendu des
     composants en test automatique (aucune bibliothèque de test de composants installée), police × 1,3 sur appareil,
     lecteurs d'écran, iOS / Android.
+- **Mode démo** (Réglages > « Data & demo mode ») : bascule sur une base séparée `tatakae-demo.db`, générée au premier
+  passage avec ~10 semaines de données aléatoires (sessions avec pauses, arrêts anticipés, notes, XP, une session à
+  cheval sur minuit, jours de repos, habitudes cochées ou manquées, tâches faites / en retard / à venir). « Generate new
+  sample data » en produit un nouveau jeu ; « Back to my real data » revient à la base réelle, intacte. Un bandeau
+  « Demo mode · sample data » reste visible dans l'en-tête. Garde-fous : `seedDemo` refuse toute base autre que la base
+  démo, la bascule et la régénération sont refusées pendant une session active, aucun rappel de notification n'est créé
+  par la démo. Le choix de base est conservé après rechargement. Le générateur (`src/domain/demoData.ts`) est pur et
+  reproductible par graine ; ses paramètres sont dans `PRODUCT.demo`.
+  - **Testé** : génération (bornes, cohérence segments/XP, pas de chevauchement, une seule session sur minuit, rien dans
+    le futur), garde-fou « base réelle », réinitialisation complète (toutes les tables couvertes), reprise après une
+    génération interrompue, refus pendant une session. **Vérifié à la main sur le web** : entrée / sortie du mode démo,
+    régénération, base réelle inchangée au retour. **Non testé** : la bascule sur iOS / Android.
 - Rien de natif n'est testé (iOS/Android) : seule la version web a été exécutée.
 
 ## Lancer le projet

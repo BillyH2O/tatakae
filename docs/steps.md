@@ -252,7 +252,7 @@ Conventions that override this document (see `ARCHITECTURE.md` §11): routes liv
 **Content:**
 - JSON export (all tables + schema version + date) via `expo-file-system` + `expo-sharing`.
 - Delete all data: double confirmation (type "DELETE"), cancels notifications, releases blocking, deletes the `.db` file + avatar, back to onboarding.
-- Demo mode: Settings > Data > "Demo mode"; switches to a generated `tatakae-demo.db` (3 weeks of sessions, quests, ratings, one session spanning midnight, one rest day); permanent "Demo mode" banner in the header; leaving = back to the intact real database.
+- Demo mode (**implemented early in step-08b-demo-data**, only the polish remains here): Settings > Data > "Demo mode"; switches to a generated `tatakae-demo.db` (3 weeks of sessions, quests, ratings, one session spanning midnight, one rest day); permanent "Demo mode" banner in the header; leaving = back to the intact real database.
 - Accessibility: `accessibilityRole`/`Label`/`State` on all controls, reading order, `fontScale` up to 1.5 without overlap (scrolling), targets ≥ 44 pt.
 - Full visual review against the art direction (`ARCHITECTURE.md` §10) and the mockup deviations listed at the top of `ARCHITECTURE.md`.
 

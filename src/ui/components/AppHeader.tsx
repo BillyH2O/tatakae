@@ -4,10 +4,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { goalProgress, type FocusVsGoal } from '../../domain/totals';
+import { useDatabaseMode } from '../../hooks/useDatabaseMode';
 import { useHeaderData } from '../../hooks/useHeaderData';
 import { useToday } from '../../hooks/useToday';
 import { en, formatDuration } from '../../i18n/en';
-import { border, colors, headerMaxFontScale, panel, space, touch, type } from '../theme/tokens';
+import { border, colors, headerMaxFontScale, panel, radius, space, touch, type } from '../theme/tokens';
 import { Avatar } from './Avatar';
 import { ProgressBar } from './ProgressBar';
 
@@ -52,6 +53,7 @@ export function AppHeader() {
   const router = useRouter();
   const today = useToday();
   const data = useHeaderData(today);
+  const { isDemo } = useDatabaseMode();
 
   const openStats = () => router.push({ pathname: '/stats', params: { period: 'week', anchor: today } });
   const level = data?.level;
@@ -94,6 +96,18 @@ export function AppHeader() {
         <View style={styles.divider} />
         <TotalColumn label={en.header.week} value={data?.totals.week} onPress={openStats} />
       </View>
+      {isDemo ? (
+        <Pressable
+          onPress={() => router.push('/settings/data')}
+          style={styles.demo}
+          accessibilityRole="button"
+          accessibilityLabel={en.demo.bannerA11y}
+        >
+          <Text style={styles.demoText} maxFontSizeMultiplier={headerMaxFontScale}>
+            {en.demo.banner}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -118,4 +132,14 @@ const styles = StyleSheet.create({
   totalLabel: { ...type.caption, color: colors.textMuted },
   totalValue: { ...type.label, color: colors.text, fontVariant: ['tabular-nums'], flexShrink: 1 },
   divider: { width: border.hairline, backgroundColor: colors.divider },
+  demo: {
+    alignSelf: 'flex-start',
+    minHeight: 24,
+    justifyContent: 'center',
+    paddingHorizontal: space.sm,
+    borderRadius: radius.sm,
+    borderWidth: border.hairline,
+    borderColor: colors.warning,
+  },
+  demoText: { ...type.caption, color: colors.warning },
 });
