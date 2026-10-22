@@ -71,7 +71,14 @@ export function DbProvider({ children }: { children: ReactNode }) {
   return (
     <DatabaseModeContext.Provider value={mode}>
       <DbErrorBoundary key={databaseName}>
-        <Suspense fallback={<FullScreenMessage title={en.db.loading} busy />}>
+        <Suspense
+          fallback={
+            <FullScreenMessage
+              title={databaseName === DEMO_DB_NAME ? en.db.loadingDemo : en.db.loading}
+              busy
+            />
+          }
+        >
           <SQLiteProvider databaseName={databaseName} useSuspense onInit={initDatabase}>
             <DbBridge>{children}</DbBridge>
           </SQLiteProvider>

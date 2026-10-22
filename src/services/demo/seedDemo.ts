@@ -7,6 +7,7 @@ import {
   completeTask,
   createHabit,
   createTask,
+  getProfile,
   insertClosedPause,
   insertDaySegments,
   insertFinishedSession,
@@ -183,6 +184,14 @@ export async function seedDemo(db: SqlDb, clock: Clock, newId: IdGenerator, opti
   dataEvents.emit('profile', 'goals', 'categories', 'settings', 'sessions', 'quests', 'xp', 'wallet');
 }
 
+/** True when the demo file is missing generated history (first open, interrupted seed, or cleared storage). */
+export async function demoDatabaseNeedsSeed(db: SqlDb): Promise<boolean> {
+  if ((await appStateRepo.get<number>(db, APP_STATE_KEYS.demoSeededAt)) === null) return true;
+  if (!(await getProfile(db))) return true;
+  const row = await db.get<{ n: number }>('SELECT COUNT(*) AS n FROM sessions');
+  return (row?.n ?? 0) === 0;
+}
+
 /** Opening the demo database for the first time (or after an interrupted seeding) generates its content. */
 export async function ensureDemoSeeded(
   db: SqlDb,
@@ -191,6 +200,6 @@ export async function ensureDemoSeeded(
   databaseName: string,
 ): Promise<void> {
   if (databaseName !== DEMO_DB_NAME) return;
-  if ((await appStateRepo.get<number>(db, APP_STATE_KEYS.demoSeededAt)) !== null) return;
+  if (!(await demoDatabaseNeedsSeed(db))) return;
   await seedDemo(db, clock, newId, { databaseName });
 }

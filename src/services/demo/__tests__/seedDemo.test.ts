@@ -18,7 +18,7 @@ import { createMigratedDb } from '../../../test/factories';
 import { createFakeClock, createSequentialIds } from '../../../test/fakeClock';
 import { startSession } from '../../sessionService';
 import { canSwitchDatabase, regenerateDemoData } from '../demoMode';
-import { ensureDemoSeeded, seedDemo } from '../seedDemo';
+import { demoDatabaseNeedsSeed, ensureDemoSeeded, seedDemo } from '../seedDemo';
 
 const NOW = new Date(2026, 9, 22, 20, 0, 0).getTime();
 const TODAY = d('2026-10-22');
@@ -164,6 +164,14 @@ describe('ensureDemoSeeded', () => {
     );
     await ensureDemoSeeded(env.db, env.clock, env.newId, DEMO_DB_NAME);
     expect((await getProfile(env.db))?.displayName).toBe(PRODUCT.demo.displayName);
+  });
+
+  it('re-seeds when the marker exists but there are no sessions', async () => {
+    const env = await setup();
+    await appStateRepo.set(env.db, APP_STATE_KEYS.demoSeededAt, NOW, NOW);
+    expect(await demoDatabaseNeedsSeed(env.db)).toBe(true);
+    await ensureDemoSeeded(env.db, env.clock, env.newId, DEMO_DB_NAME);
+    expect(await count(env.db, 'sessions')).toBeGreaterThan(40);
   });
 });
 

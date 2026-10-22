@@ -82,6 +82,8 @@ export const en = {
   },
   db: {
     loading: 'Opening your data…',
+    loadingDemo:
+      'Opening demo mode… Generating sample data the first time can take up to a minute on web. Please wait.',
     errorTitle: 'Unable to open your data',
     errorBody:
       'Something went wrong while opening the local database. Your data has not been changed. Restart the app; if the problem persists, report the error below.',
