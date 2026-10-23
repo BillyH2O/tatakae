@@ -5,16 +5,19 @@ alwaysApply: true
 
 # Tatakae
 
-Contexte : `AGENTS.md`, `docs/PRODUCT_SPEC.md` (référence produit), `docs/ARCHITECTURE.md` (décisions techniques).
+Navigation : **`docs/AGENT_MAP.md`** (task → files + doc sections). Read `docs/PRODUCT_SPEC.md` / `docs/ARCHITECTURE.md` **only by section**, never whole files unless the user asks.
+
+**Scope:** minimal diff; `Grep` before full-file `Read`; no browser/canvas/extra docs unless requested; no README edits unless requested.
 
 - TypeScript strict (`noUncheckedIndexedAccess`). Pas de `any` implicite ; pas d'import profond de `react-native/Libraries/*`.
-- Interface en anglais (chaînes dans `src/i18n/en.ts`), code, types, noms SQL en anglais.
-- Calculs métier (scores, radar, totaux, répartition minuit/DST, XP, niveaux, machine du timer) : fonctions pures dans `src/domain/`, sans import React/Expo/DB, **toujours accompagnées de tests** (`npm test`). Tests en fuseau `Europe/Paris` (`src/test/globalSetup.js`).
-- Hypothèses produit centralisées dans `src/config/product.ts`, commentées « HYPOTHÈSE PRODUIT ». Aucun nombre produit en dur ailleurs.
-- Jours = `LocalDate` (`YYYY-MM-DD`, fuseau local), instants = epoch ms. Jamais `+ 86_400_000` pour changer de jour : `addDays`.
-- Accès données : repositories (`src/db/repositories`) via l'interface `SqlDb` ; écritures multi-lignes dans `db.transaction`. Migrations additives uniquement (jamais modifier une migration livrée).
-- Pas de `Date.now()` dans les écrans/services : `Clock` injecté. Identifiants via `newId`.
-- Blocage des distractions : l'UI n'affiche « bloqué/actif » que si l'état natif confirmé le dit ; sinon « Blocage non disponible dans cette version ». Ne jamais simuler un succès natif.
-- Pas d'écran « Temps d'écran », pas de règle d'attribution ni de boutique de cristaux.
-- Dépendances : `npx expo install`, peu de bibliothèques ; vérifier la doc SDK 58 avant d'utiliser une API Expo.
+- UI en anglais (`src/i18n/en.ts`), code/types/SQL en anglais.
+- Métier : fonctions pures `src/domain/` + tests (`npm test`), fuseau `Europe/Paris` (`src/test/globalSetup.js`). Pas d'import React/Expo/DB dans le domaine.
+- Nombres produit : `src/config/product.ts` (« HYPOTHÈSE PRODUIT ») uniquement.
+- Dates : `LocalDate` + `addDays` ; pas de `+ 86_400_000` pour changer de jour.
+- Données : `src/db/repositories/` + `SqlDb` ; écritures dans `db.transaction`. Migrations **additives** (ne pas modifier une migration livrée).
+- Temps : `Clock` injecté, pas de `Date.now()` dans app/services. IDs : `newId`.
+- Totaux : une source (`useFocusTotals` / domaine) ; pas de SQL dans `src/app/` ni `src/ui/`.
+- Blocage : UI « bloqué/actif » seulement si natif confirmé ; sinon « Blocage non disponible dans cette version ». Jamais simuler le natif.
+- Pas d'écran temps d'écran, pas de boutique cristaux, démo = base séparée uniquement.
+- Paquets Expo : `npx expo install` ; doc SDK 58 avant nouvelle API Expo.
 - Avant de conclure : `npm run check` vert.

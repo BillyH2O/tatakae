@@ -1,0 +1,8 @@
+﻿node_modules/
+.expo/
+dist/
+coverage/
+*.log
+graphify-out/
+android/
+ios/
